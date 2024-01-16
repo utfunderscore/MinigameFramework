@@ -1,5 +1,7 @@
 package com.readutf.inari.core.utils;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -9,7 +11,8 @@ public class Position {
 
     private final double x, y, z;
 
-    public Position(double x, double y, double z) {
+    @JsonCreator
+    public Position(@JsonProperty("x") double x, @JsonProperty("y") double y, @JsonProperty("z") double z) {
         this.x = x;
         this.y = y;
         this.z = z;
@@ -37,6 +40,17 @@ public class Position {
     }
 
     /**
+     * Subtracts the offset from the position
+     * @param offsetX the x offset to subtract
+     * @param offsetY the y offset to subtract
+     * @param offsetZ the z offset to subtract
+     * @return the new position
+     */
+    public Position subtract(double offsetX, double offsetY, double offsetZ) {
+        return new Position(x - offsetX, y - offsetY, z - offsetZ);
+    }
+
+    /**
      * Adds the offset to the position
      * @param position the position to add
      * @return the new position
@@ -45,4 +59,21 @@ public class Position {
         return add(position.x, position.y, position.z);
     }
 
+    /**
+     * Subtracts the offset from the position
+     * @param position the position to subtract
+     * @return the new position
+     */
+    public Position subtract(Position position) {
+        return subtract(position.x, position.y, position.z);
+    }
+
+    @Override
+    public String toString() {
+        return "Position{" +
+                "x=" + x +
+                ", y=" + y +
+                ", z=" + z +
+                '}';
+    }
 }

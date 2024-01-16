@@ -14,6 +14,15 @@ public class WorldCuboid extends Cuboid{
         this.world = world;
     }
 
+    public WorldCuboid(World world, double x1, double y1, double z1, double x2, double y2, double z2) {
+        super(x1, y1, z1, x2, y2, z2);
+        this.world = world;
+    }
+
+    public Cuboid toCuboid() {
+        return new Cuboid(getMin(), getMax());
+    }
+
     public boolean contains(Location location) {
         return location.getWorld() == world && super.contains(new Position(location));
     }

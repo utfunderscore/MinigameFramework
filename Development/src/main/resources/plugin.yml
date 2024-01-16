@@ -1,0 +1,6 @@
+name: InariDemo
+version: 1.0
+main: com.readutf.inari.test.InariDemo
+api-version: 1.19
+depend:
+  - WorldEdit
