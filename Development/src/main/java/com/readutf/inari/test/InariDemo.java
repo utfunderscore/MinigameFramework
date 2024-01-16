@@ -4,7 +4,7 @@ import co.aikar.commands.PaperCommandManager;
 import com.readutf.inari.core.arena.ArenaManager;
 import com.readutf.inari.core.arena.marker.impl.TileEntityScanner;
 import com.readutf.inari.core.arena.selection.impl.WorldEditSelectionManager;
-import com.readutf.inari.core.arena.stores.SchematicArenaManager;
+import com.readutf.inari.core.arena.stores.schematic.SchematicArenaManager;
 import com.readutf.inari.core.commands.ArenaCommands;
 import org.bukkit.plugin.java.JavaPlugin;
 

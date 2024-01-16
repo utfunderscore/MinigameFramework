@@ -1,4 +1,4 @@
-package com.readutf.inari.core;
+package com.readutf.inari.core.arena.stores.schematic.grid;
 
 import com.readutf.inari.core.logging.Logger;
 import com.readutf.inari.core.logging.LoggerManager;

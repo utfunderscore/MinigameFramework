@@ -1,8 +1,8 @@
-package com.readutf.inari.core.arena.stores;
+package com.readutf.inari.core.arena.stores.schematic;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.readutf.inari.core.GridPositionManager;
+import com.readutf.inari.core.arena.stores.schematic.grid.GridPositionManager;
 import com.readutf.inari.core.arena.Arena;
 import com.readutf.inari.core.arena.ArenaManager;
 import com.readutf.inari.core.arena.exceptions.ArenaLoadException;
@@ -49,10 +49,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 
