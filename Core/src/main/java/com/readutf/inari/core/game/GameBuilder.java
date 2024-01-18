@@ -1,7 +1,7 @@
 package com.readutf.inari.core.game;
 
 import com.google.common.base.Preconditions;
-import com.readutf.inari.core.arena.WorldArena;
+import com.readutf.inari.core.arena.ActiveArena;
 import com.readutf.inari.core.event.GameEventManager;
 import com.readutf.inari.core.game.spawning.SpawnFinder;
 import com.readutf.inari.core.game.stage.RoundCreator;
@@ -15,7 +15,7 @@ public class GameBuilder {
     private final Game game;
 
     public GameBuilder(JavaPlugin javaPlugin,
-                       WorldArena intialArena,
+                       ActiveArena intialArena,
                        GameEventManager gameEventManager,
                        List<Team> playerTeams,
                        RoundCreator... stageCreators) {

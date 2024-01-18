@@ -2,7 +2,7 @@ package com.readutf.inari.test.commands;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
-import com.readutf.inari.core.arena.WorldArena;
+import com.readutf.inari.core.arena.ActiveArena;
 import com.readutf.inari.core.arena.ArenaManager;
 import com.readutf.inari.core.arena.exceptions.ArenaLoadException;
 import com.readutf.inari.core.arena.meta.ArenaMeta;
@@ -34,7 +34,7 @@ public class DevCommand extends BaseCommand {
         Optional<ArenaMeta> first = arenaManager.findAvailableArenas(arenaMeta -> true).stream().findFirst();
         first.ifPresentOrElse(arenaMeta -> {
             try {
-                WorldArena load = arenaManager.load(arenaMeta);
+                ActiveArena load = arenaManager.load(arenaMeta);
 
                 Team team = new Team("test", ChatColor.BLUE, List.of(player.getUniqueId()));
 

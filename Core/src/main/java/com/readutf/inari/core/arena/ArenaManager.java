@@ -40,7 +40,7 @@ public abstract class ArenaManager {
 
     protected abstract void save(WorldCuboid worldCuboid, Arena arena) throws ArenaStoreException;
 
-    public abstract WorldArena load(ArenaMeta arenaMeta) throws ArenaLoadException;
+    public abstract ActiveArena load(ArenaMeta arenaMeta) throws ArenaLoadException;
 
     public abstract void unload(Arena arena);
 

@@ -2,7 +2,7 @@ package com.readutf.inari.core.arena.stores.schematic;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.readutf.inari.core.arena.WorldArena;
+import com.readutf.inari.core.arena.ActiveArena;
 import com.readutf.inari.core.arena.stores.schematic.grid.GridPositionManager;
 import com.readutf.inari.core.arena.Arena;
 import com.readutf.inari.core.arena.ArenaManager;
@@ -137,7 +137,7 @@ public class SchematicArenaManager extends ArenaManager {
     }
 
     @Override
-    public WorldArena load(ArenaMeta arenaMeta) throws ArenaLoadException {
+    public ActiveArena load(ArenaMeta arenaMeta) throws ArenaLoadException {
 
         Arena arena;
 
@@ -151,7 +151,7 @@ public class SchematicArenaManager extends ArenaManager {
         if (arena == null) throw new ArenaLoadException("Arena not found");
 
 
-        return new WorldArena(world, arena);
+        return new ActiveArena(world, arena, this::unload);
     }
 
     @Override

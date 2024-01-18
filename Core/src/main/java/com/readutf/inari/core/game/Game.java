@@ -1,6 +1,6 @@
 package com.readutf.inari.core.game;
 
-import com.readutf.inari.core.arena.WorldArena;
+import com.readutf.inari.core.arena.ActiveArena;
 import com.readutf.inari.core.event.GameEventManager;
 import com.readutf.inari.core.event.testlistener.TestListener;
 import com.readutf.inari.core.game.death.DeathListeners;
@@ -35,10 +35,10 @@ public class Game {
     private SpawnFinder playerSpawnFinder;
     private SpawnFinder spectatorSpawnFinder;
     private GameLang lang;
-    private WorldArena arena;
+    private ActiveArena arena;
     private Round currentRound;
 
-    protected Game(JavaPlugin javaPlugin, GameEventManager gameEventManager, WorldArena intialArena, List<Team> playerTeams, RoundCreator... stageCreators) {
+    protected Game(JavaPlugin javaPlugin, GameEventManager gameEventManager, ActiveArena intialArena, List<Team> playerTeams, RoundCreator... stageCreators) {
         this.gameId = UUID.randomUUID();
         this.javaPlugin = javaPlugin;
         this.arena = intialArena;
@@ -133,7 +133,7 @@ public class Game {
     }
 
     public static GameBuilder builder(JavaPlugin javaPlugin,
-                                      WorldArena intialArena,
+                                      ActiveArena intialArena,
                                       GameEventManager gameEventManager,
                                       List<Team> playerTeams,
                                       RoundCreator... stageCreators) {

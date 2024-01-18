@@ -1,6 +1,6 @@
 package com.readutf.inari.core.game.spawning.impl;
 
-import com.readutf.inari.core.arena.WorldArena;
+import com.readutf.inari.core.arena.ActiveArena;
 import com.readutf.inari.core.arena.marker.Marker;
 import com.readutf.inari.core.game.Game;
 import com.readutf.inari.core.game.spawning.SpawnFinder;
@@ -43,8 +43,8 @@ public class TeamBasedSpawning implements SpawnFinder {
         return bestSpawn;
     }
 
-    public static TeamBasedSpawning fromArena(WorldArena worldArena, String prefix) {
-        List<Marker> markers = worldArena.getMarkers(prefix);
+    public static TeamBasedSpawning fromArena(ActiveArena activeArena, String prefix) {
+        List<Marker> markers = activeArena.getMarkers(prefix);
         HashMap<Integer, List<Location>> teamSpawns = new HashMap<>();
         System.out.println("found markers: " + markers);
 
@@ -56,7 +56,7 @@ public class TeamBasedSpawning implements SpawnFinder {
                 continue;
             }
             List<Location> existing = teamSpawns.getOrDefault(teamId, new ArrayList<>());
-            existing.add(marker.getPosition().toLocation(worldArena.getWorld()));
+            existing.add(marker.getPosition().toLocation(activeArena.getWorld()));
             teamSpawns.put(teamId, existing);
         }
         System.out.println(teamSpawns);
