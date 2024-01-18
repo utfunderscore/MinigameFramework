@@ -28,6 +28,15 @@ public class Marker {
         this.yaw = yaw;
     }
 
+    @Override
+    public String toString() {
+        return "Marker{" +
+                "name='" + name + '\'' +
+                ", position=" + position +
+                ", yaw=" + yaw +
+                '}';
+    }
+
     public static @Nullable Marker parseFromSign(Location location) {
         Block block = location.getBlock();
         if (!(block.getState() instanceof Sign sign)) return null;
@@ -65,5 +74,4 @@ public class Marker {
 
         return new Marker(nameLine, position, yaw);
     }
-
 }
