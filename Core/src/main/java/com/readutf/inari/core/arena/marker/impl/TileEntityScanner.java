@@ -16,7 +16,7 @@ import java.util.List;
 
 public class TileEntityScanner implements MarkerScanner {
 
-    private static Logger logger = LoggerManager.getLoggerManager().getLogger(TileEntityScanner.class);
+    private static Logger logger = LoggerManager.getInstance().getLogger(TileEntityScanner.class);
 
     @Override
     public List<Marker> scan(WorldCuboid worldCuboid) {

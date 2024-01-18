@@ -58,7 +58,7 @@ public class SchematicArenaManager extends ArenaManager {
     private static final WorldCreator worldCreator = new WorldCreator("active_arenas");
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private @Getter static final World world;
-    private static Logger logger = LoggerManager.getLoggerManager().getLogger(SchematicArenaManager.class);
+    private static Logger logger = LoggerManager.getInstance().getLogger(SchematicArenaManager.class);
 
     static {
         worldCreator.type(WorldType.FLAT);

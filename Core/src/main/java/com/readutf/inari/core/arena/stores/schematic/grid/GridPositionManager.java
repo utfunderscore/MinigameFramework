@@ -8,7 +8,7 @@ import java.util.ArrayDeque;
 
 public class GridPositionManager {
 
-    private static Logger logger = LoggerManager.loggerManager.getLogger(GridPositionManager.class);
+    private static Logger logger = LoggerManager.instance.getLogger(GridPositionManager.class);
 
     private final ArrayDeque<GridSpace> recentlyFreed = new ArrayDeque<>();
     private final int spaceBetween;
