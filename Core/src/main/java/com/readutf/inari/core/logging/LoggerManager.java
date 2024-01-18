@@ -7,7 +7,7 @@ import java.util.Map;
 
 public class LoggerManager {
 
-    public @Getter static LoggerManager loggerManager = new LoggerManager();
+    public @Getter static LoggerManager instance = new LoggerManager();
 
     private final Map<String, Logger> loggerCache = new HashMap<>();
 
