@@ -52,7 +52,7 @@ public class Arena {
     public @JsonIgnore Arena makeRelative(Position position) {
 
         Cuboid newBounds = new Cuboid(position, bounds.getMax().add(position));
-        List<Marker> newMarkers = markers.stream().map(marker -> new Marker(marker.getName(), marker.getPosition().subtract(position), marker.getYaw())).toList();
+        List<Marker> newMarkers = markers.stream().map(marker -> new Marker(marker.getName(), marker.getPosition().add(position), marker.getYaw())).toList();
 
         return new Arena(name, newBounds, arenaMeta, newMarkers);
     }
@@ -66,6 +66,7 @@ public class Arena {
     }
 
     public List<Marker> getMarkers(String prefix) {
+        System.out.println(markers);
         return markers.stream().filter(marker -> marker.getName().startsWith(prefix)).toList();
     }
 
