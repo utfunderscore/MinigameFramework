@@ -1,6 +1,7 @@
 package com.readutf.inari.core.event;
 
 import org.bukkit.event.Event;
+import org.jetbrains.annotations.NotNull;
 
 public interface GameEventAdapter {
 
@@ -9,6 +10,6 @@ public interface GameEventAdapter {
      * @param event the event
      * @return the game
      */
-    GameAdapterResult getGame(Event event);
+    @NotNull GameAdapterResult getGame(Event event);
 
 }

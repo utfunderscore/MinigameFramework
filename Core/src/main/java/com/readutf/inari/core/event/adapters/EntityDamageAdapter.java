@@ -10,6 +10,7 @@ import org.bukkit.event.Event;
 import org.bukkit.event.entity.EntityDamageByBlockEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.jetbrains.annotations.NotNull;
 
 public class EntityDamageAdapter implements GameEventAdapter {
 
@@ -20,7 +21,7 @@ public class EntityDamageAdapter implements GameEventAdapter {
     }
 
     @Override
-    public GameAdapterResult getGame(Event event) {
+    public @NotNull GameAdapterResult getGame(Event event) {
 
         if (event instanceof EntityDamageByEntityEvent entityDamageByEntityEvent) {
             Game game = damageByPlayer(entityDamageByEntityEvent);
