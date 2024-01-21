@@ -14,4 +14,12 @@ public class Team {
     private final ChatColor color;
     private final List<UUID> players;
 
+    @Override
+    public String toString() {
+        return "Team{" +
+                "teamName='" + teamName + '\'' +
+                ", color=" + color +
+                ", players=" + players +
+                '}';
+    }
 }

@@ -22,6 +22,10 @@ public class GameBuilder {
         this.game = new Game(javaPlugin, gameEventManager, intialArena, playerTeams, stageCreators);
     }
 
+    public GameBuilder(GameCreator gameCreator) {
+        this.game = gameCreator.create();
+    }
+
     public GameBuilder setPlayerSpawnHandler( SpawnFinder spawnFinder) {
         game.setPlayerSpawnFinder(spawnFinder);
         return this;

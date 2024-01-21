@@ -26,9 +26,6 @@ public class WorldEditUtils {
     }
 
     public static <T> CompletableFuture<T> runTask(Callable<T> runnable) {
-        System.out.println("isFawe = " + isFawe);
-
-
         if (isFawe) {
             try {
                 return CompletableFuture.completedFuture(runnable.call());

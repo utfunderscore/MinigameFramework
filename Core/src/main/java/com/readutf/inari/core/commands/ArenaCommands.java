@@ -9,7 +9,7 @@ import com.readutf.inari.core.arena.exceptions.ArenaLoadException;
 import com.readutf.inari.core.arena.exceptions.ArenaStoreException;
 import com.readutf.inari.core.arena.meta.ArenaMeta;
 import com.readutf.inari.core.arena.selection.SelectionManager;
-import com.readutf.inari.core.arena.stores.schematic.SchematicArenaManager;
+import com.readutf.inari.core.arena.stores.gridloader.SchematicArenaManager;
 import com.readutf.inari.core.utils.WorldCuboid;
 import lombok.AllArgsConstructor;
 import net.md_5.bungee.api.ChatColor;
@@ -55,8 +55,6 @@ public class ArenaCommands extends BaseCommand {
 
 
             List<ArenaMeta> availableArenas = arenaManager.findAvailableArenas(arenaMeta -> true);
-
-            System.out.println(availableArenas);
 
             availableArenas.stream().findFirst().ifPresent(arenaMeta -> {
                 try {

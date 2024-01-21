@@ -3,6 +3,7 @@ package com.readutf.inari.core.game.spawning.impl;
 import com.readutf.inari.core.arena.ActiveArena;
 import com.readutf.inari.core.arena.marker.Marker;
 import com.readutf.inari.core.game.Game;
+import com.readutf.inari.core.game.exception.GameException;
 import com.readutf.inari.core.game.spawning.SpawnFinder;
 import com.readutf.inari.core.logging.Logger;
 import com.readutf.inari.core.logging.LoggerManager;
@@ -26,10 +27,16 @@ public class TeamBasedSpawning implements SpawnFinder {
     }
 
     @Override
-    public @NotNull Location findSpawn(Game game, UUID uuid) {
-        List<Location> spawnLocations = teamSpawns.getOrDefault(game.getTeamIndex(uuid)+1, new ArrayList<>());
+    public @NotNull Location findSpawn(Game game, Player player) throws GameException {
+        int teamId = game.getTeamIndex(player.getUniqueId()) + 1;
+        List<Location> spawnLocations = teamSpawns.getOrDefault(teamId, null);
+        if(spawnLocations == null || spawnLocations.isEmpty()) {
+            logger.warn("No spawn locations found for team " + teamId);
+            throw new GameException("No spawn locations found for team " + teamId);
+        }
 
-        Location bestSpawn = spawnLocations.get(0);
+
+        Location bestSpawn = spawnLocations.getFirst();
         int nearbyBest = Integer.MAX_VALUE;
         for (Location spawnLocation : spawnLocations) {
             int nearby = spawnLocation.getNearbyEntitiesByType(Player.class, 2).size();
@@ -46,7 +53,6 @@ public class TeamBasedSpawning implements SpawnFinder {
     public static TeamBasedSpawning fromArena(ActiveArena activeArena, String prefix) {
         List<Marker> markers = activeArena.getMarkers(prefix);
         HashMap<Integer, List<Location>> teamSpawns = new HashMap<>();
-        System.out.println("found markers: " + markers);
 
         for (Marker marker : markers) {
             String id = marker.getName().split(":")[1];
@@ -56,10 +62,9 @@ public class TeamBasedSpawning implements SpawnFinder {
                 continue;
             }
             List<Location> existing = teamSpawns.getOrDefault(teamId, new ArrayList<>());
-            existing.add(marker.getPosition().toLocation(activeArena.getWorld()));
+            existing.add(marker.toLocation(activeArena.getWorld()));
             teamSpawns.put(teamId, existing);
         }
-        System.out.println(teamSpawns);
 
         return new TeamBasedSpawning(teamSpawns);
     }

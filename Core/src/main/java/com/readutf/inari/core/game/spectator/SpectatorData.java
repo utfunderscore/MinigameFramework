@@ -2,18 +2,19 @@ package com.readutf.inari.core.game.spectator;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Getter
+@Getter @Setter
 public class SpectatorData {
 
-    private final boolean respawn;
-    private final long durationMillis;
-    private final long respawnAt;
-    private final boolean canFly;
-    private final List<Integer> messageIntervals;
+    private boolean respawn;
+    private long durationMillis;
+    private long respawnAt;
+    private boolean canFly;
+    private List<Integer> messageIntervals;
 
     public SpectatorData(boolean respawn, long durationMillis, boolean canFly, List<Integer> messageIntervals) {
         this.respawn = respawn;

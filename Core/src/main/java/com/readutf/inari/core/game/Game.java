@@ -5,24 +5,33 @@ import com.readutf.inari.core.event.GameEventManager;
 import com.readutf.inari.core.event.testlistener.TestListener;
 import com.readutf.inari.core.game.death.DeathListeners;
 import com.readutf.inari.core.game.death.DeathManager;
-import com.readutf.inari.core.game.exception.MatchException;
+import com.readutf.inari.core.game.events.GameEndEvent;
+import com.readutf.inari.core.game.events.GameStartEvent;
+import com.readutf.inari.core.game.exception.GameException;
 import com.readutf.inari.core.game.lang.DefaultGameLang;
 import com.readutf.inari.core.game.spawning.SpawnFinder;
+import com.readutf.inari.core.game.spectator.SpectatorData;
 import com.readutf.inari.core.game.spectator.SpectatorManager;
 import com.readutf.inari.core.game.stage.Round;
 import com.readutf.inari.core.game.stage.RoundCreator;
+import com.readutf.inari.core.game.task.GameThread;
 import com.readutf.inari.core.game.team.Team;
 import lombok.Getter;
 import lombok.Setter;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
 @Getter
 @Setter
 public class Game {
+
+    private static Timer timer = new Timer();
 
     private final UUID gameId;
     private final JavaPlugin javaPlugin;
@@ -31,8 +40,10 @@ public class Game {
     private final GameEventManager gameEventManager;
     private final DeathManager deathManager;
     private final SpectatorManager spectatorManager;
+    private final GameThread gameThread;
 
     private SpawnFinder playerSpawnFinder;
+    private @NotNull GameState gameState;
     private SpawnFinder spectatorSpawnFinder;
     private GameLang lang;
     private ActiveArena arena;
@@ -46,34 +57,95 @@ public class Game {
         this.gameEventManager = gameEventManager;
         this.spectatorManager = new SpectatorManager(this);
         this.lang = new DefaultGameLang();
+        this.gameThread = new GameThread(this);
         this.stages = new ArrayDeque<>(Arrays.asList(stageCreators));
         this.deathManager = new DeathManager(this);
+        this.gameState = GameState.WAITING;
 
-
+        timer.schedule(gameThread, 0, 1);
 
         Arrays.asList(
                 new TestListener(),
                 new DeathListeners(deathManager)
         ).forEach(o -> gameEventManager.scanForListeners(this, o));
-
-        gameEventManager.scanForListeners(this, new TestListener());
-
     }
 
-    public void start() throws MatchException {
+    public void start() throws GameException {
+        if (gameState != GameState.WAITING) throw new GameException("Game is already started");
+
         RoundCreator creator = stages.poll();
-        if (creator == null) throw new MatchException("No stages to start");
+        if (creator == null) throw new GameException("No stages to start");
         currentRound = creator.createRound(this, null);
-        currentRound.init();
+
 
         for (Player alivePlayers : getOnlineAndAlivePlayers()) {
-            Team team = getTeamByPlayer(alivePlayers);
-            alivePlayers.teleport(playerSpawnFinder.findSpawn(this, alivePlayers.getUniqueId()));
+            alivePlayers.teleport(playerSpawnFinder.findSpawn(this, alivePlayers));
         }
+
+        currentRound.roundStart();
+
+        Bukkit.getPluginManager().callEvent(new GameStartEvent(this));
+        this.gameState = GameState.ACTIVE;
     }
 
-    public void end() {
+    public void endRound() {
+
+        currentRound.roundEnd();
+
+        RoundCreator creator = stages.poll();
+        if (creator == null) {
+            endGame(null, GameEndReason.NO_ROUNDS_LEFT);
+            return;
+        }
+
+        currentRound = creator.createRound(this, currentRound);
+        currentRound.roundStart();
+    }
+
+    public void endGame(Team winner, GameEndReason reason) {
+        gameState = GameState.ENDED;
+
+        GameEndEvent event = new GameEndEvent(this, winner, reason);
+        Bukkit.getPluginManager().callEvent(event);
+        if (event.isCancelled()) return;
+
+        for (Player onlinePlayer : getOnlinePlayers()) {
+            for (Component c : lang.getGameSummaryMessage(onlinePlayer)) {
+                onlinePlayer.sendMessage(c);
+            }
+
+            SpectatorData spectatorData = spectatorManager.getSpectatorData(onlinePlayer.getUniqueId());
+            if(spectatorData != null) {
+                spectatorManager.revertState(onlinePlayer);
+            }
+
+        }
+
+        currentRound.roundEnd();
+        gameThread.cancel();
         spectatorManager.shutdown();
+        gameEventManager.unregisterGame(this);
+        GameManager.getInstance().removeGame(this);
+    }
+
+    public void messageAlive(TextComponent textComponent) {
+
+        for (Player onlineAndAlivePlayer : getOnlineAndAlivePlayers()) {
+            onlineAndAlivePlayer.sendMessage(textComponent);
+        }
+
+    }
+
+    public void messageAlive(String message) {
+        messageAlive(Component.text(message));
+    }
+
+    public void killPlayer(Player player) {
+        deathManager.killPlayer(player);
+    }
+
+    public void registerListeners(Object object) {
+        gameEventManager.scanForListeners(this, object);
     }
 
     public List<Player> getOnlineAndAlivePlayers() {
@@ -139,5 +211,4 @@ public class Game {
                                       RoundCreator... stageCreators) {
         return new GameBuilder(javaPlugin, intialArena, gameEventManager, playerTeams, stageCreators);
     }
-
 }

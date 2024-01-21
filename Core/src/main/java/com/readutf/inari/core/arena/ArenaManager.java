@@ -6,7 +6,10 @@ import com.readutf.inari.core.arena.marker.Marker;
 import com.readutf.inari.core.arena.marker.MarkerScanner;
 import com.readutf.inari.core.arena.meta.ArenaMeta;
 import com.readutf.inari.core.utils.WorldCuboid;
+import net.minecraft.world.level.block.BlockSign;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.material.MaterialData;
 
 import java.util.HashMap;
@@ -27,7 +30,12 @@ public abstract class ArenaManager {
     public Arena createArena(String name, WorldCuboid cuboid) throws ArenaStoreException {
         List<Marker> markers = markerScanner.scan(cuboid);
         for (Marker marker : markers) {
-            marker.getPosition().toLocation(cuboid.getWorld()).getBlock().setType(Material.AIR);
+            Block signBlock = marker.getPosition().toLocation(cuboid.getWorld()).getBlock();
+            signBlock.setType(Material.AIR);
+            Block above = signBlock.getRelative(BlockFace.UP);
+            if(above.getType() == Material.SKELETON_SKULL) {
+                above.setType(Material.AIR);
+            }
         }
 
         Arena arena = new Arena(name, cuboid.toCuboid(), new ArenaMeta(name, "test", new MaterialData(Material.PAPER)), markers);

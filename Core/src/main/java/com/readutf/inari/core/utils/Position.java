@@ -1,6 +1,7 @@
 package com.readutf.inari.core.utils;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import org.bukkit.Location;
@@ -22,6 +23,25 @@ public class Position {
         this.x = location.getX();
         this.y = location.getY();
         this.z = location.getZ();
+    }
+
+    @JsonIgnore
+    public int getBlockX() {
+        return (int) Math.floor(x);
+    }
+
+    @JsonIgnore
+    public int getBlockY() {
+        return (int) Math.floor(y);
+    }
+
+    @JsonIgnore
+    public int getBlockZ() {
+        return (int) Math.floor(z);
+    }
+
+    public static Position fromLocation(Location location) {
+        return new Position(location);
     }
 
     public Location toLocation(World world) {

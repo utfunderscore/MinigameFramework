@@ -1,7 +1,9 @@
 package com.readutf.inari.core.game.spectator;
 
 import com.readutf.inari.core.game.Game;
+import com.readutf.inari.core.game.exception.GameException;
 import com.readutf.inari.core.game.spawning.SpawnFinder;
+import net.kyori.adventure.text.Component;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -27,27 +29,30 @@ public class SpectatorManager {
 
     public void setSpectator(UUID playerId, SpectatorData data) {
         spectatorData.put(playerId, data);
-        Location spawn = game.getSpectatorSpawnFinder().findSpawn(game, playerId);
 
-        if(data.isRespawn() && data.getRespawnAt() <= System.currentTimeMillis()) {
+        if (data.isRespawn() && data.getRespawnAt() <= System.currentTimeMillis()) {
             respawnPlayer(playerId);
             return;
         }
 
         Player player = Bukkit.getPlayer(playerId);
-        if(player != null) {
+        if (player != null) {
 
-            player.teleport(spawn);
-            player.setAllowFlight(data.isCanFly());
-            for (String s : game.getLang().getSpectateMessage(player, data)) {
-                player.sendMessage(s);
+            Location spawn;
+            try {
+                spawn = game.getSpectatorSpawnFinder().findSpawn(game, player);
+            } catch (GameException e) {
+                e.printStackTrace();
+                player.sendMessage(ChatColor.RED + "Failed to find a spawn location for you.");
+                return;
             }
 
-            for (Player alivePlayer : game.getOnlineAndAlivePlayers()) {
-                alivePlayer.hidePlayer(player);
-            }
+            applyState(data, player, spawn);
 
-            player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 1, false, false, false));
+            for (Component c : game.getLang().getSpectateMessage(player, data)) {
+                player.sendMessage(c);
+
+            }
         }
 
 
@@ -55,24 +60,28 @@ public class SpectatorManager {
 
     public void respawnPlayer(UUID playerId) {
 
-        if(!spectatorData.containsKey(playerId)) return;
+        if (!spectatorData.containsKey(playerId)) return;
 
         spectatorData.remove(playerId);
 
         SpawnFinder spawnFinder = game.getPlayerSpawnFinder();
 
         Player player = Bukkit.getPlayer(playerId);
-        if(player != null) {
+        if (player != null) {
 
             //spawn player
-            Location spawn = spawnFinder.findSpawn(game, playerId);
+            Location spawn = null;
+            try {
+                spawn = spawnFinder.findSpawn(game, player);
+            } catch (GameException e) {
+                e.printStackTrace();
+                player.sendMessage(ChatColor.RED + "Failed to find a spawn location for you.");
+                return;
+            }
             player.teleport(spawn);
 
             //reset player state
-            player.clearActivePotionEffects();
-            for (Player onlinePlayer : game.getOnlinePlayers()) {
-                onlinePlayer.showPlayer(player);
-            }
+            revertState(player);
 
 
             player.sendMessage(ChatColor.GREEN + "You have respawned!");
@@ -80,6 +89,25 @@ public class SpectatorManager {
             awaitingRejoin.add(playerId);
         }
 
+    }
+
+    public void revertState(Player player) {
+        player.clearActivePotionEffects();
+        player.setAllowFlight(false);
+        player.setFlying(false);
+        for (Player alivePlayer : game.getOnlineAndAlivePlayers()) {
+            alivePlayer.showPlayer(player);
+        }
+    }
+
+    public void applyState(SpectatorData data, Player player, Location spawn) {
+        player.teleport(spawn);
+        player.setAllowFlight(data.isCanFly());
+        player.setFlying(true);
+        for (Player alivePlayer : game.getOnlineAndAlivePlayers()) {
+            alivePlayer.hidePlayer(player);
+        }
+        player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 1, false, false, false));
     }
 
     public void shutdown() {

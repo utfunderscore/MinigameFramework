@@ -6,6 +6,6 @@ public enum GameEndReason {
     TIME,
     ENEMIES_ELIMINATED,
     OBJECTIVES_COMPLETED,
-    CANCELLED;
+    CANCELLED, NO_ROUNDS_LEFT;
 
 }

@@ -46,24 +46,25 @@ import java.util.function.Predicate;
 
 public class SchematicArenaManager extends ArenaManager {
 
-    private static final WorldCreator worldCreator;
+    private @Getter static final WorldCreator worldCreator;
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private @Getter static final World world;
     private static Logger logger = LoggerManager.getInstance().getLogger(SchematicArenaManager.class);
 
     static {
 
-        try {
-            FileUtils.deleteDirectory(new File(Bukkit.getServer().getWorldContainer().getParent(), "active_arenas"));
-            logger.fine("Deleted old active_arenas folder");
-        } catch (IOException e) {
-            logger.fine("Failed to delete old active_arenas folder");
-        }
+//        try {
+////            FileUtils.deleteDirectory(new File(Bukkit.getServer().getWorldContainer().getParent(), "active_arenas"));
+//            logger.fine("Deleted old active_arenas folder");
+//        } catch (IOException e) {
+//            logger.fine("Failed to delete old active_arenas folder");
+//        }
 
         worldCreator = new WorldCreator("active_arenas");
         worldCreator.type(WorldType.FLAT);
         worldCreator.generator(new VoidChunkGenerator());
         world = worldCreator.createWorld();
+        world.setAutoSave(false);
 
         SimpleModule simpleModule = new SimpleModule();
         simpleModule.addDeserializer(MaterialData.class, new MaterialDataDeserializer());
@@ -99,6 +100,7 @@ public class SchematicArenaManager extends ArenaManager {
                 return null;
             }).get();
         } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
             throw new ArenaStoreException("Failed to save schematic.");
         }
 
@@ -204,7 +206,9 @@ public class SchematicArenaManager extends ArenaManager {
     private File setupArenasFolder(File pluginFolder) {
         final File arenasFolder;
         arenasFolder = new File(pluginFolder, "arenas");
-        if (arenasFolder.mkdirs()) System.out.println("Created arenas folder");
+        if (arenasFolder.mkdirs()) {
+            logger.fine("Created arenas folder");
+        }
         return arenasFolder;
     }
 

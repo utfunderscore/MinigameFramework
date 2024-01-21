@@ -1,5 +1,8 @@
 package com.readutf.inari.test;
 
+import java.util.Comparator;
+import java.util.List;
+
 public class Test {
 
     public static class A {
@@ -13,11 +16,11 @@ public class Test {
     public static void main(String[] args) {
 
 
-        B b = new B();
+        List<Integer> integers = new java.util.ArrayList<>(List.of(1, 5, 4, 3));
 
-        System.out.println(b instanceof A);
-        System.out.println(A.class.isAssignableFrom(b.getClass()));
+        integers.sort(Comparator.comparingInt(value -> (int) value).reversed());
 
+        System.out.println(integers);
 
     }
 

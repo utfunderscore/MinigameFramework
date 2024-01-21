@@ -66,7 +66,6 @@ public class Arena {
     }
 
     public List<Marker> getMarkers(String prefix) {
-        System.out.println(markers);
         return markers.stream().filter(marker -> marker.getName().startsWith(prefix)).toList();
     }
 
