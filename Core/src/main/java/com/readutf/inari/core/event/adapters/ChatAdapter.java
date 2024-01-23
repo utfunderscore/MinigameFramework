@@ -1,19 +1,18 @@
 package com.readutf.inari.core.event.adapters;
 
-import com.fastasyncworldedit.core.util.NbtUtils;
 import com.readutf.inari.core.event.GameAdapterResult;
 import com.readutf.inari.core.event.GameEventAdapter;
 import com.readutf.inari.core.game.Game;
 import com.readutf.inari.core.game.GameManager;
-import lombok.AllArgsConstructor;
 import org.bukkit.event.Event;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.jetbrains.annotations.NotNull;
 
-@AllArgsConstructor
-public class ChatAdapter implements GameEventAdapter {
+public class ChatAdapter extends GameEventAdapter {
 
-    private final GameManager gameManager;
+    public ChatAdapter(GameManager gameManager) {
+        super(gameManager);
+    }
 
     @Override
     public @NotNull GameAdapterResult getGame(Event event) {

@@ -12,12 +12,10 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.jetbrains.annotations.NotNull;
 
-public class EntityDamageAdapter implements GameEventAdapter {
-
-    private final GameManager gameManager;
+public class EntityDamageAdapter extends GameEventAdapter {
 
     public EntityDamageAdapter(GameManager gameManager) {
-        this.gameManager = gameManager;
+        super(gameManager);
     }
 
     @Override
