@@ -1,9 +1,6 @@
 package com.readutf.inari.core.event;
 
-import com.readutf.inari.core.event.adapters.ChatAdapter;
-import com.readutf.inari.core.event.adapters.EntityDamageAdapter;
-import com.readutf.inari.core.event.adapters.GameEventEventAdapter;
-import com.readutf.inari.core.event.adapters.PlayerMoveAdapter;
+import com.readutf.inari.core.event.adapters.*;
 import com.readutf.inari.core.game.Game;
 import com.readutf.inari.core.game.GameManager;
 import com.readutf.inari.core.game.events.GameEvent;
@@ -15,8 +12,11 @@ import org.bukkit.event.Event;
 import org.bukkit.event.EventException;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.plugin.EventExecutor;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -34,8 +34,7 @@ public class GameEventManager implements Listener {
     private final JavaPlugin javaPlugin;
     private final Map<UUID, Map<Class<? extends Event>, List<GameEventListener>>> gameIdToEventMethod;
     private final Map<Class<? extends Event>, GameEventAdapter> eventAdapterMap;
-    private @Getter
-    final List<Class<? extends Event>> activeDebugs;
+    private @Getter final List<Class<? extends Event>> activeDebugs;
 
     public GameEventManager(JavaPlugin javaPlugin, GameManager gameManager) {
         this.javaPlugin = javaPlugin;
@@ -48,7 +47,7 @@ public class GameEventManager implements Listener {
             if (aClass.isInterface() || Modifier.isAbstract(aClass.getModifiers())) continue;
 
             try {
-                registerEventAdapter(aClass, new GameEventEventAdapter());
+                registerEventAdapter(aClass, new GameEventEventAdapter(gameManager));
             } catch (Exception e) {
                 logger.warn("Failed to register GameEventEventAdapter for " + aClass.getSimpleName() + " because " + e.getMessage());
             }
@@ -56,6 +55,22 @@ public class GameEventManager implements Listener {
         registerEventAdapter(EntityDamageEvent.class, new EntityDamageAdapter(gameManager));
         registerEventAdapter(AsyncPlayerChatEvent.class, new ChatAdapter(gameManager));
         registerEventAdapter(PlayerMoveEvent.class, new PlayerMoveAdapter(gameManager));
+        registerEventAdapter(BlockPlaceEvent.class, new BlockPlaceAdapter(gameManager));
+        registerEventAdapter(BlockBreakEvent.class, new BlockBreakAdapter(gameManager));
+
+        for (Class<? extends PlayerEvent> aClass : new Reflections("org.bukkit.event").getSubTypesOf(PlayerEvent.class)) {
+            //check that class is not interface or abstract
+            if(eventAdapterMap.containsKey(aClass)) continue;
+            if (aClass.isInterface() || Modifier.isAbstract(aClass.getModifiers())) continue;
+
+            try {
+                registerEventAdapter(aClass, new PlayerEventAdapter(gameManager));
+            } catch (Exception e) {
+                logger.warn("Failed to register PlayerEventAdapter for " + aClass.getSimpleName() + " because " + e.getMessage());
+            }
+
+        }
+
     }
 
     public void registerEventAdapter(Class<? extends Event> eventType, GameEventAdapter adapter) {
@@ -77,6 +92,11 @@ public class GameEventManager implements Listener {
                 }
                 if (!Event.class.isAssignableFrom(parameters[0])) {
                     logger.warn("Method " + method.getName() + " in class " + clazz.getName() + " must have only one parameter of type Event");
+                    continue;
+                }
+
+                if(!eventAdapterMap.containsKey(parameters[0])) {
+                    logger.warn("No GameEventAdapter found for event " + parameters[0].getSimpleName());
                     continue;
                 }
 
