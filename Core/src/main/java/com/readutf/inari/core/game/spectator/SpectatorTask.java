@@ -39,7 +39,7 @@ public class SpectatorTask extends BukkitRunnable {
             }
 
             if (respawnIn <= 0) {
-                game.getSpectatorManager().respawnPlayer(spectator);
+                game.getSpectatorManager().respawnPlayer(spectator, true);
             }
 
         }
