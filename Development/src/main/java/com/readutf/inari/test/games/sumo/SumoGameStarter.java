@@ -12,7 +12,6 @@ import com.readutf.inari.core.game.spawning.impl.TeamBasedSpawning;
 import com.readutf.inari.core.game.team.Team;
 import com.readutf.inari.test.InariDemo;
 import com.readutf.inari.test.games.GameStarter;
-import com.readutf.inari.test.payload.PayloadRound;
 import lombok.AllArgsConstructor;
 
 import java.util.List;

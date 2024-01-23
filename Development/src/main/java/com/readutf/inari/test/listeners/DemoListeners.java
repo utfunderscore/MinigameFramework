@@ -3,6 +3,7 @@ package com.readutf.inari.test.listeners;
 import com.readutf.inari.core.game.events.GameEndEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -17,7 +18,13 @@ public class DemoListeners implements Listener {
         for (UUID allPlayer : e.getGame().getAllPlayers()) {
             Player player = Bukkit.getPlayer(allPlayer);
             if(player != null) {
-                player.teleport(new Location(Bukkit.getWorld("world"), 0, 100, 0));
+
+                Location location = new Location(Bukkit.getWorld("world"), 0, 100, 0);
+                while (!location.getBlock().getRelative(BlockFace.DOWN).getType().isSolid()) {
+                    location.add(0, -1, 0);
+                }
+
+                player.teleport(location);
             }
         }
 

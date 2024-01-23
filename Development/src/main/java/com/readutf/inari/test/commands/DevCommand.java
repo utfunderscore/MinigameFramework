@@ -2,44 +2,12 @@ package com.readutf.inari.test.commands;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
-import com.readutf.inari.core.arena.ActiveArena;
 import com.readutf.inari.core.arena.ArenaManager;
-import com.readutf.inari.core.arena.exceptions.ArenaLoadException;
-import com.readutf.inari.core.arena.meta.ArenaMeta;
-import com.readutf.inari.core.arena.stores.gridloader.loader.impl.RawDataLoader;
 import com.readutf.inari.core.event.GameEventManager;
-import com.readutf.inari.core.game.Game;
 import com.readutf.inari.core.game.GameManager;
-import com.readutf.inari.core.game.exception.GameException;
-import com.readutf.inari.core.game.spawning.impl.TeamBasedSpawning;
-import com.readutf.inari.core.game.team.Team;
-import com.readutf.inari.test.InariDemo;
-import com.readutf.inari.test.payload.PayloadRound;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import net.minecraft.network.protocol.game.ClientboundLevelChunkPacketData;
-import net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket;
-import net.minecraft.network.protocol.game.PacketPlayOutMap;
-import net.minecraft.server.level.WorldServer;
-import net.minecraft.world.level.chunk.Chunk;
-import net.minecraft.world.level.chunk.ChunkStatus;
-import net.minecraft.world.level.chunk.IChunkAccess;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.World;
-import org.bukkit.craftbukkit.v1_20_R3.CraftWorld;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import static com.readutf.inari.core.arena.stores.gridloader.loader.impl.RawDataLoader.copyNativeChunk;
 
 @RequiredArgsConstructor
 public class DevCommand extends BaseCommand {

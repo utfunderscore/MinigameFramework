@@ -2,6 +2,10 @@ package com.readutf.inari.test.games.sumo;
 
 import com.readutf.inari.core.game.Game;
 import com.readutf.inari.core.game.stage.Round;
+import com.readutf.inari.core.game.team.Team;
+import com.readutf.inari.core.utils.ColorUtils;
+import com.readutf.inari.core.utils.Cuboid;
+import com.readutf.inari.test.games.shared.BuildPreventionListeners;
 import com.readutf.inari.test.utils.Countdown;
 import com.readutf.inari.test.utils.ThreadUtils;
 import lombok.Getter;
@@ -14,6 +18,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
@@ -38,6 +43,9 @@ public class SumoRound implements Round {
 
     private final Game game;
     private final SumoRound previousRound;
+    private final Map<Team, Integer> teamScores;
+    private final Cuboid safeZone;
+
     private final int roundNumber;
     private Countdown countdown;
 
@@ -45,9 +53,14 @@ public class SumoRound implements Round {
         this.previousRound = previousRound;
         this.game = game;
         this.roundNumber = previousRound == null ? 1 : previousRound.getRoundNumber() + 1;
+        this.teamScores = previousRound == null ? new HashMap<>() : new HashMap<>(previousRound.getTeamScores());
         if(previousRound == null) {
             game.registerListeners(new SumoListeners(game));
+            game.registerListeners(new BuildPreventionListeners(true, true));
+            for (Team aliveTeam : game.getAliveTeams()) teamScores.put(aliveTeam, 0);
         }
+
+        safeZone = game.getArena().getCuboid("safezone:1", "safezone:2");
     }
 
     @Override
@@ -68,11 +81,12 @@ public class SumoRound implements Round {
             if (title != null) game.getOnlinePlayers().forEach(player -> player.showTitle(title));
 
             if (countdownIntervals.contains(timeLeft)) {
-                game.messageAlive("Round starting in " + timeLeft + " seconds");
+                game.messageAlive(ColorUtils.color("&7Round starting in &a" + timeLeft + " &7seconds"));
             }
 
             if (timeLeft == 0) {
                 countdownEnd();
+                game.messageAlive(ColorUtils.color("&7Round &a" + roundNumber + " &7has started!"));
             }
         });
 
@@ -94,7 +108,9 @@ public class SumoRound implements Round {
 
 
     @Override
-    public void roundEnd() {
+    public void roundEnd(Team winner) {
+        if (game.getAliveTeams().isEmpty()) return;
+
 
     }
 

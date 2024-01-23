@@ -1,6 +1,7 @@
 package com.readutf.inari.test;
 
 import co.aikar.commands.PaperCommandManager;
+import com.readutf.inari.core.InariCore;
 import com.readutf.inari.core.arena.ArenaManager;
 import com.readutf.inari.core.arena.marker.impl.TileEntityScanner;
 import com.readutf.inari.core.arena.selection.impl.WorldEditSelectionManager;
@@ -32,8 +33,10 @@ public class InariDemo extends JavaPlugin {
     @Override
     public void onEnable() {
 
+        InariCore inariCore = new InariCore(this);
+
         WorldEditSelectionManager worldEditSelectionManager = new WorldEditSelectionManager();
-        this.arenaManager = new SchematicArenaManager(new TileEntityScanner(), new RawDataLoader(getDataFolder()), getDataFolder());
+        this.arenaManager = new SchematicArenaManager(new TileEntityScanner(), new WorldEditLoader(), getDataFolder());
         this.gameManager = new GameManager();
         GameEventManager gameEventManager = new GameEventManager(this, gameManager);
 

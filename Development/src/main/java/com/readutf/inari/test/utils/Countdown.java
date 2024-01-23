@@ -20,7 +20,7 @@ public class Countdown extends GameTask {
      */
     public Countdown(Game game, int duration, Consumer<Integer> timeConsumer) {
         this.game = game;
-        this.duration = duration;
+        this.duration = duration+1;
         this.timeConsumer = timeConsumer;
         game.getGameThread().submitRepeatingTask(this, 0, 20);
     }
@@ -31,7 +31,7 @@ public class Countdown extends GameTask {
     public void run() {
         int sinceStart = MinecraftServer.currentTick - startTime;
 
-        if(sinceStart % 20 == 0) {
+        if((sinceStart-1) % 20 == 0) {
             timeConsumer.accept((duration - (sinceStart / 20)));
         }
 
