@@ -14,18 +14,22 @@ import org.bukkit.block.data.Rotatable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
+
 @SuppressWarnings("deprecation")
 @Getter
 public class Marker {
 
     private final String name;
     private final Position position;
+    private final Position offset;
     private final float yaw;
 
     @JsonCreator
-    public Marker(@JsonProperty("name") String name, @JsonProperty("position") Position position, @JsonProperty("yaw") float yaw) {
+    public Marker(@JsonProperty("name") String name, @JsonProperty("position") Position position, @JsonProperty("offset") Position offset, @JsonProperty("yaw") float yaw) {
         this.name = name;
         this.position = position;
+        this.offset = offset;
         this.yaw = yaw;
     }
 
@@ -40,9 +44,14 @@ public class Marker {
 
     @JsonIgnore
     public Location toLocation(World world) {
-        Location location = position.toLocation(world);
+        Location location = position.add(offset).toLocation(world);
         location.setYaw(yaw);
         return location;
+    }
+
+    @JsonIgnore
+    public Position getPositionWithOffset() {
+        return position.add(offset);
     }
 
     public static @Nullable Marker parseFromSign(Location location) {
@@ -52,7 +61,6 @@ public class Marker {
         if (!lines[0].equalsIgnoreCase("#marker")) return null;
 
 
-
         Position position = new Position(location);
 
         //get name
@@ -60,24 +68,27 @@ public class Marker {
 
         float yaw = 0;
 
-        if(sign instanceof Rotatable) {
+        if (sign instanceof Rotatable) {
             yaw = AngleUtils.faceToYaw(((Rotatable) sign).getRotation());
         }
+
+        Position offset = new Position(0, 0, 0);
 
         //check for offset
         String coordinateLine = lines[2];
         if (!coordinateLine.isBlank()) {
-            String[] cordinateSplit = coordinateLine.split(" ");
+            String[] cordinateSplit = coordinateLine.split(",");
+
             if (cordinateSplit.length != 3) return null;
 
             double offsetX = Double.parseDouble(cordinateSplit[0]);
             double offsetY = Double.parseDouble(cordinateSplit[1]);
             double offsetZ = Double.parseDouble(cordinateSplit[2]);
 
-            position = position.add(offsetX, offsetY, offsetZ);
+             offset = new Position(offsetX, offsetY, offsetZ);
         }
 
 
-        return new Marker(nameLine, position, yaw);
+        return new Marker(nameLine, position, offset, yaw);
     }
 }
