@@ -11,6 +11,7 @@ import com.readutf.inari.core.game.exception.GameException;
 import com.readutf.inari.core.game.lang.DefaultGameLang;
 import com.readutf.inari.core.game.spawning.SpawnFinder;
 import com.readutf.inari.core.game.spectator.SpectatorData;
+import com.readutf.inari.core.game.spectator.SpectatorListeners;
 import com.readutf.inari.core.game.spectator.SpectatorManager;
 import com.readutf.inari.core.game.stage.Round;
 import com.readutf.inari.core.game.stage.RoundCreator;
@@ -24,6 +25,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
@@ -66,40 +68,52 @@ public class Game {
 
         Arrays.asList(
                 new TestListener(),
-                new DeathListeners(deathManager)
-        ).forEach(o -> gameEventManager.scanForListeners(this, o));
+                new DeathListeners(deathManager),
+                new SpectatorListeners(this)
+        ).forEach(this::registerListeners);
     }
 
     public void start() throws GameException {
         if (gameState != GameState.WAITING) throw new GameException("Game is already started");
 
-        RoundCreator creator = stages.poll();
-        if (creator == null) throw new GameException("No stages to start");
-        currentRound = creator.createRound(this, null);
+        startNextRound();
 
+        Bukkit.getPluginManager().callEvent(new GameStartEvent(this));
+        this.gameState = GameState.ACTIVE;
+    }
+
+    public void endRound(@Nullable Team winner) {
+
+        currentRound.roundEnd(winner);
+
+        try {
+            startNextRound();
+        } catch (Exception ignored) {}
+    }
+
+    private int round = 0;
+
+    private void startNextRound() throws GameException {
+        RoundCreator creator = stages.poll();
+        if (creator == null) {
+            endGame(null, GameEndReason.NO_ROUNDS_LEFT);
+            return;
+        }
+        currentRound = creator.createRound(this, currentRound);
+
+
+        for (UUID spectator : spectatorManager.getSpectators()) {
+            Player player = Bukkit.getPlayer(spectator);
+            if (player == null || !player.isOnline()) continue;
+            spectatorManager.respawnPlayer(player.getUniqueId(), false);
+        }
 
         for (Player alivePlayers : getOnlineAndAlivePlayers()) {
             alivePlayers.teleport(playerSpawnFinder.findSpawn(this, alivePlayers));
         }
 
         currentRound.roundStart();
-
-        Bukkit.getPluginManager().callEvent(new GameStartEvent(this));
-        this.gameState = GameState.ACTIVE;
-    }
-
-    public void endRound() {
-
-        currentRound.roundEnd();
-
-        RoundCreator creator = stages.poll();
-        if (creator == null) {
-            endGame(null, GameEndReason.NO_ROUNDS_LEFT);
-            return;
-        }
-
-        currentRound = creator.createRound(this, currentRound);
-        currentRound.roundStart();
+        round++;
     }
 
     public void endGame(Team winner, GameEndReason reason) {
@@ -121,23 +135,19 @@ public class Game {
 
         }
 
-        currentRound.roundEnd();
+        currentRound.roundEnd(winner);
         gameThread.cancel();
         spectatorManager.shutdown();
         gameEventManager.unregisterGame(this);
         GameManager.getInstance().removeGame(this);
     }
 
-    public void messageAlive(TextComponent textComponent) {
+    public void messageAlive(Component component) {
 
         for (Player onlineAndAlivePlayer : getOnlineAndAlivePlayers()) {
-            onlineAndAlivePlayer.sendMessage(textComponent);
+            onlineAndAlivePlayer.sendMessage(component);
         }
 
-    }
-
-    public void messageAlive(String message) {
-        messageAlive(Component.text(message));
     }
 
     public void killPlayer(Player player) {
@@ -148,11 +158,15 @@ public class Game {
         gameEventManager.scanForListeners(this, object);
     }
 
+    public void setNextRound(Round round) {
+        stages.addFirst((game, previousRound) -> round);
+    }
+
     public List<Player> getOnlineAndAlivePlayers() {
         List<Player> list = new ArrayList<>();
         for (UUID uuid : getAllPlayers()) {
             Player player = Bukkit.getPlayer(uuid);
-            if (player == null || !player.isOnline() || !isAlive(player)) continue;
+            if (player == null || !player.isOnline() || !isAlive(player.getUniqueId())) continue;
             list.add(player);
         }
         return list;
@@ -191,8 +205,12 @@ public class Game {
         return null;
     }
 
-    public boolean isAlive(Player player) {
-        return !spectatorManager.isSpectator(player.getUniqueId());
+    public List<Team> getAliveTeams() {
+        return playerTeams.stream().filter(team -> team.getPlayers().stream().anyMatch(this::isAlive)).toList();
+    }
+
+    public boolean isAlive(UUID playerId) {
+        return !spectatorManager.isSpectator(playerId);
     }
 
     public List<UUID> getAllPlayers() {

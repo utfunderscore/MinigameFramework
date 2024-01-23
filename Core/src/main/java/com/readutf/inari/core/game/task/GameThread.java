@@ -36,7 +36,7 @@ public class GameThread extends TimerTask {
         int sinceFirstTick = MinecraftServer.currentTick - startTick;
 
 
-        for (Map.Entry<GameTask, TaskInfo> entry : gameTasks.entrySet()) {
+        for (Map.Entry<GameTask, TaskInfo> entry : new ArrayList<>(gameTasks.entrySet())) {
             GameTask gameTask = entry.getKey();
             TaskInfo taskInfo = entry.getValue();
             if(gameTask.isCancelled()) {

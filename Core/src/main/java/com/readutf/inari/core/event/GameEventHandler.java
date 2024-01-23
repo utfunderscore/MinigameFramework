@@ -10,5 +10,6 @@ import java.lang.annotation.Target;
 public @interface GameEventHandler {
 
     int priority() default 0;
+    boolean ignoreCancelled() default false;
 
 }

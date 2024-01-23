@@ -5,14 +5,16 @@ import com.readutf.inari.core.game.spectator.SpectatorData;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
-public class GameSpectateEvent extends PlayerGameEvent {
+public class GameSpectateEvent extends PlayerGameEvent implements Cancellable {
 
     private static final HandlerList handlers = new HandlerList();
 
     private @Setter @Getter SpectatorData spectatorData;
+    private @Getter @Setter boolean cancelled;
 
     public GameSpectateEvent(Player player, Game game, SpectatorData spectatorData) {
         super(player, game);
@@ -27,6 +29,5 @@ public class GameSpectateEvent extends PlayerGameEvent {
     public static @NotNull HandlerList getHandlerList() {
         return handlers;
     }
-
 
 }

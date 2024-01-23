@@ -1,25 +1,22 @@
 package com.readutf.inari.core.game.events;
 
 import com.readutf.inari.core.game.Game;
+import lombok.Getter;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
-public class MatchDeathEvent extends PlayerGameEvent {
+public class GameDeathEvent extends PlayerGameEvent {
 
-    private static final HandlerList handlers = new HandlerList();
+    private static @Getter HandlerList handlerList = new HandlerList();
 
-    public MatchDeathEvent(Player player, Game game) {
+    public GameDeathEvent(Player player, Game game) {
         super(player, game);
     }
 
     @Override
     public @NotNull HandlerList getHandlers() {
-        return handlers;
+        return handlerList;
     }
-
-    public static HandlerList getHandlerList() {
-        return handlers;
-    }
-
 }

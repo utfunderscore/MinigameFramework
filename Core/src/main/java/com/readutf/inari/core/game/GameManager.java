@@ -4,6 +4,7 @@ import com.readutf.inari.core.game.exception.GameException;
 import lombok.Getter;
 import org.bukkit.entity.Player;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -31,6 +32,19 @@ public class GameManager {
         game.start();
     }
 
+    public void removeGame(Game game) {
+        for (UUID allPlayer : game.getAllPlayers()) {
+            playerToGame.remove(allPlayer);
+        }
+        idToGame.remove(game.getGameId());
+    }
+
+    public void shutdown() {
+        for (Game value : idToGame.values()) {
+            value.endGame(null, GameEndReason.CANCELLED);
+        }
+    }
+
     public Game getGameById(UUID uuid) {
         return idToGame.get(uuid);
     }
@@ -43,16 +57,7 @@ public class GameManager {
         return playerToGame.get(player.getUniqueId());
     }
 
-    public void removeGame(Game game) {
-        for (UUID allPlayer : game.getAllPlayers()) {
-            playerToGame.remove(allPlayer);
-        }
-        idToGame.remove(game.getGameId());
-    }
-
-    public void shutdown() {
-        for (Game value : idToGame.values()) {
-            value.endGame(null, GameEndReason.CANCELLED);
-        }
+    public Collection<Game> getGames() {
+        return idToGame.values();
     }
 }
