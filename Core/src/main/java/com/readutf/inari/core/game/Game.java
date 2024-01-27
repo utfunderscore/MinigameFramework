@@ -1,11 +1,15 @@
 package com.readutf.inari.core.game;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.stream.JsonReader;
 import com.readutf.inari.core.arena.ActiveArena;
 import com.readutf.inari.core.event.GameEventManager;
 import com.readutf.inari.core.event.testlistener.TestListener;
 import com.readutf.inari.core.game.death.DeathListeners;
 import com.readutf.inari.core.game.death.DeathManager;
 import com.readutf.inari.core.game.events.GameEndEvent;
+import com.readutf.inari.core.game.events.GameRoundStart;
 import com.readutf.inari.core.game.events.GameStartEvent;
 import com.readutf.inari.core.game.exception.GameException;
 import com.readutf.inari.core.game.lang.DefaultGameLang;
@@ -17,12 +21,15 @@ import com.readutf.inari.core.game.stage.Round;
 import com.readutf.inari.core.game.stage.RoundCreator;
 import com.readutf.inari.core.game.task.GameThread;
 import com.readutf.inari.core.game.team.Team;
+import com.readutf.inari.core.utils.serialize.ConfigurationSerializableAdapter;
+import com.readutf.inari.core.utils.serialize.ItemStackAdapter;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -50,6 +57,7 @@ public class Game {
     private final DeathManager deathManager;
     private final SpectatorManager spectatorManager;
     private final GameThread gameThread;
+    private final Map<String, String> attributes;
 
     private SpawnFinder playerSpawnFinder;
     private @NotNull GameState gameState;
@@ -64,6 +72,7 @@ public class Game {
         this.arena = intialArena;
         this.playerTeams = playerTeams;
         this.gameEventManager = gameEventManager;
+        this.attributes = new HashMap<>();
         this.spectatorManager = new SpectatorManager(this);
         this.lang = new DefaultGameLang();
         this.gameThread = new GameThread(this);
@@ -95,7 +104,8 @@ public class Game {
 
         try {
             startNextRound();
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
     }
 
     private int round = 0;
