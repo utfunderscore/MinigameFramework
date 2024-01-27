@@ -217,6 +217,22 @@ public class Game {
         return playerTeams.stream().filter(team -> team.getPlayers().stream().anyMatch(this::isAlive)).toList();
     }
 
+    public @Nullable <T> T getAttribute(String key, Class<T> clazz) {
+        if(String.class == clazz) return clazz.cast(attributes.get(key));
+
+        String content = attributes.get(key);
+        if (content == null) return null;
+        return gson.fromJson(content, clazz);
+    }
+
+    public void setAttribute(String key, Object value) {
+        if(value instanceof String) {
+            attributes.put(key, (String) value);
+            return;
+        }
+        attributes.put(key, gson.toJson(value));
+    }
+
     public boolean isAlive(UUID playerId) {
         return !spectatorManager.isSpectator(playerId);
     }
