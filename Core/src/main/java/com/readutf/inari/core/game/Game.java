@@ -34,6 +34,13 @@ import java.util.*;
 public class Game {
 
     private static Timer timer = new Timer();
+    private static @Getter Gson gson = new GsonBuilder()
+            .setObjectToNumberStrategy(JsonReader::nextInt)
+            .registerTypeHierarchyAdapter(ItemStack.class, new ItemStackAdapter())
+            .registerTypeHierarchyAdapter(ConfigurationSerializable.class, new ConfigurationSerializableAdapter())
+            .setPrettyPrinting()
+            .serializeNulls()
+            .create();
 
     private final UUID gameId;
     private final JavaPlugin javaPlugin;

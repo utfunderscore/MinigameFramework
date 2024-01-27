@@ -1,9 +1,7 @@
 package com.readutf.inari.core.arena.marker;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.readutf.inari.core.utils.AngleUtils;
+import com.readutf.inari.core.utils.JsonIgnore;
 import com.readutf.inari.core.utils.Position;
 import lombok.Getter;
 import org.bukkit.Location;
@@ -25,8 +23,7 @@ public class Marker {
     private final Position offset;
     private final float yaw;
 
-    @JsonCreator
-    public Marker(@JsonProperty("name") String name, @JsonProperty("position") Position position, @JsonProperty("offset") Position offset, @JsonProperty("yaw") float yaw) {
+    public Marker(String name, Position position, Position offset, float yaw) {
         this.name = name;
         this.position = position;
         this.offset = offset;
@@ -44,7 +41,7 @@ public class Marker {
 
     @JsonIgnore
     public Location toLocation(World world) {
-        Location location = position.add(offset).toLocation(world);
+        Location location = position.add(offset).center().toLocation(world);
         location.setYaw(yaw);
         return location;
     }
@@ -85,7 +82,7 @@ public class Marker {
             double offsetY = Double.parseDouble(cordinateSplit[1]);
             double offsetZ = Double.parseDouble(cordinateSplit[2]);
 
-             offset = new Position(offsetX, offsetY, offsetZ);
+            offset = new Position(offsetX, offsetY, offsetZ);
         }
 
 

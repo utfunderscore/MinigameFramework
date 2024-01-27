@@ -1,11 +1,9 @@
 package com.readutf.inari.core.arena;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.readutf.inari.core.arena.marker.Marker;
 import com.readutf.inari.core.arena.meta.ArenaMeta;
 import com.readutf.inari.core.utils.Cuboid;
+import com.readutf.inari.core.utils.JsonIgnore;
 import com.readutf.inari.core.utils.Position;
 import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
@@ -25,14 +23,6 @@ public class Arena {
         this.bounds = bounds;
         this.markers = markers;
         this.arenaMeta = arenaMeta;
-    }
-
-    @JsonCreator
-    public static Arena create(@JsonProperty("name") String name,
-                               @JsonProperty("bounds") Cuboid bounds,
-                               @JsonProperty("arenaMeta") ArenaMeta arenaMeta,
-                               @JsonProperty("markers") List<Marker> markers) {
-        return new Arena(name, bounds, arenaMeta, markers);
     }
 
     public @Nullable Marker getMarker(String markerName) {
@@ -55,7 +45,6 @@ public class Arena {
 
         return new Arena(name, newBounds, arenaMeta, newMarkers);
     }
-
 
     public @Nullable Cuboid getCuboid(String markerName1, String markerName2) {
         Marker marker1 = getMarker(markerName1);

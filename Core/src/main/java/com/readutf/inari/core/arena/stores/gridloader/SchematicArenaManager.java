@@ -47,7 +47,6 @@ import java.util.function.Predicate;
 public class SchematicArenaManager extends ArenaManager {
 
     private @Getter static final WorldCreator worldCreator;
-    private static final ObjectMapper objectMapper = new ObjectMapper();
     private @Getter static final World world;
     private static Logger logger = LoggerManager.getInstance().getLogger(SchematicArenaManager.class);
 
@@ -65,25 +64,23 @@ public class SchematicArenaManager extends ArenaManager {
         worldCreator.generator(new VoidChunkGenerator());
         world = worldCreator.createWorld();
         world.setAutoSave(false);
-
-        SimpleModule simpleModule = new SimpleModule();
-        simpleModule.addDeserializer(MaterialData.class, new MaterialDataDeserializer());
-        objectMapper.registerModule(simpleModule);
     }
 
 
+    private final JavaPlugin javaPlugin;
     private final File arenasFolder;
     private final List<ArenaMeta> availableArenas;
     private final AtomicInteger currentOffset = new AtomicInteger(0);
     private final GridPositionManager gridPositionManager;
     private final ArenaBuildLoader buildLoader;
 
-    public SchematicArenaManager(MarkerScanner markerScanner, ArenaBuildLoader buildLoader, File pluginFolder) {
+    public SchematicArenaManager(JavaPlugin javaPlugin, MarkerScanner markerScanner, ArenaBuildLoader buildLoader, File pluginFolder) {
         super(markerScanner);
+        this.javaPlugin = javaPlugin;
         this.arenasFolder = setupArenasFolder(pluginFolder);
         this.availableArenas = loadAvailableArenas();
         this.buildLoader = buildLoader;
-        this.gridPositionManager = new GridPositionManager(100);
+        this.gridPositionManager = new GridPositionManager(500);
     }
 
     @Override
@@ -106,7 +103,10 @@ public class SchematicArenaManager extends ArenaManager {
 
 
         try {
-            objectMapper.writerWithDefaultPrettyPrinter().writeValue(new File(arenaFolder, "arena.json"), arena);
+
+            FileWriter writer = new FileWriter(new File(arenaFolder, "arena.json"));
+            Game.getGson().toJson(arena, writer);
+            writer.flush();
         } catch (IOException e) {
             throw new ArenaStoreException(e.getMessage());
         }
@@ -162,7 +162,7 @@ public class SchematicArenaManager extends ArenaManager {
         File arenaFolder = new File(arenasFolder, arenaMeta.getName());
         if (!arenaFolder.exists()) return null;
 
-        Arena arena = objectMapper.readValue(new File(arenaFolder, "arena.json"), Arena.class);
+        Arena arena = Game.getGson().fromJson(new FileReader(new File(arenaFolder, "arena.json")), Arena.class);
 
         GridPositionManager.GridSpace gridSpace = gridPositionManager.next();
         Position origin = new Position(gridSpace.getX(), 5, gridSpace.getZ());
@@ -191,7 +191,7 @@ public class SchematicArenaManager extends ArenaManager {
                 File arenaFile = new File(file, "arena.json");
                 if (arenaFile.exists()) {
                     try {
-                        Arena arena = objectMapper.readValue(arenaFile, Arena.class);
+                        Arena arena = Game.getGson().fromJson(new FileReader(arenaFile), Arena.class);
                         available.add(arena.getArenaMeta());
                     } catch (IOException e) {
                         e.printStackTrace();

@@ -29,7 +29,6 @@ compileJava {
 dependencies {
 
     //add jackson
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.14.1'
     implementation(platform("com.intellectualsites.bom:bom-newest:1.40")) // Ref: https://github.com/IntellectualSites/bom
     implementation 'org.reflections:reflections:0.10.2'
     implementation "net.kyori:adventure-api:4.14.0"

@@ -1,8 +1,5 @@
 package com.readutf.inari.core.utils;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -12,38 +9,51 @@ public class Position {
 
     private final double x, y, z;
 
-    @JsonCreator
-    public Position(@JsonProperty("x") double x, @JsonProperty("y") double y, @JsonProperty("z") double z) {
+    /**
+     * Creates a new position
+     * @param x the x position
+     * @param y the y position
+     * @param z the z position
+     */
+    public Position(double x, double y, double z) {
         this.x = x;
         this.y = y;
         this.z = z;
     }
 
+    /**
+     * Converts a location to a position
+     * @param location the location to convert
+     */
     public Position(Location location) {
         this.x = location.getX();
         this.y = location.getY();
         this.z = location.getZ();
     }
 
+    /**
+     * Returns the current position with the X and Y centered
+     * @return the new centered position
+     */
     @JsonIgnore
-    public int getBlockX() {
-        return (int) Math.floor(x);
+    public Position center() {
+        return new Position(getBlockX() + 0.5, getBlockY(), getBlockZ() + 0.5);
     }
 
-    @JsonIgnore
-    public int getBlockY() {
-        return (int) Math.floor(y);
-    }
-
-    @JsonIgnore
-    public int getBlockZ() {
-        return (int) Math.floor(z);
-    }
-
+    /**
+     * Shortcut for {@link #Position(Location)}
+     * @param location the location to convert
+     * @return the new position
+     */
     public static Position fromLocation(Location location) {
         return new Position(location);
     }
 
+    /**
+     * Converts the position to a location
+     * @param world the world to convert to
+     * @return the new location
+     */
     public Location toLocation(World world) {
         return new Location(world, x, y, z);
     }
@@ -88,6 +98,37 @@ public class Position {
         return subtract(position.x, position.y, position.z);
     }
 
+    /**
+     * Returns the block X position
+     * @return the block X position
+     */
+    @JsonIgnore
+    public int getBlockX() {
+        return (int) Math.floor(x);
+    }
+
+    /**
+     * Returns the block Y position
+     * @return the block Y position
+     */
+    @JsonIgnore
+    public int getBlockY() {
+        return (int) Math.floor(y);
+    }
+
+    /**
+     * Returns the block Z position
+     * @return the block Z position
+     */
+    @JsonIgnore
+    public int getBlockZ() {
+        return (int) Math.floor(z);
+    }
+
+    /**
+     * Convert the position to a string
+     * @return the string
+     */
     @Override
     public String toString() {
         return "Position{" +
