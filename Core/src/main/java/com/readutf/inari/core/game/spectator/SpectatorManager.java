@@ -139,7 +139,7 @@ public class SpectatorManager {
         player.setAllowFlight(data.isCanFly());
         player.setFlying(true);
         for (Player alivePlayer : game.getOnlineAndAlivePlayers()) {
-            alivePlayer.hidePlayer(InariCore.getInstance().getJavaPlugin(), player);
+            alivePlayer.hidePlayer(game.getJavaPlugin(), player);
         }
         player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 1, false, false, false));
     }

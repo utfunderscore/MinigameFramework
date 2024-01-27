@@ -1,7 +1,7 @@
 package com.readutf.inari.core.arena.stores.gridloader;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.google.gson.Gson;
+import com.mojang.authlib.minecraft.client.ObjectMapper;
 import com.readutf.inari.core.arena.ActiveArena;
 import com.readutf.inari.core.arena.stores.gridloader.grid.GridPositionManager;
 import com.readutf.inari.core.arena.Arena;
@@ -11,6 +11,7 @@ import com.readutf.inari.core.arena.exceptions.ArenaStoreException;
 import com.readutf.inari.core.arena.marker.MarkerScanner;
 import com.readutf.inari.core.arena.meta.ArenaMeta;
 import com.readutf.inari.core.arena.stores.gridloader.loader.ArenaBuildLoader;
+import com.readutf.inari.core.game.Game;
 import com.readutf.inari.core.logging.Logger;
 import com.readutf.inari.core.logging.LoggerManager;
 import com.readutf.inari.core.utils.*;
@@ -23,7 +24,6 @@ import com.sk89q.worldedit.function.operation.Operations;
 import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.world.block.BlockState;
 import lombok.Getter;
-import org.apache.commons.io.FileUtils;
 import org.bukkit.*;
 import org.bukkit.block.Biome;
 import org.bukkit.generator.BiomeProvider;
@@ -31,10 +31,13 @@ import org.bukkit.generator.BlockPopulator;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.generator.WorldInfo;
 import org.bukkit.material.MaterialData;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -92,7 +95,7 @@ public class SchematicArenaManager extends ArenaManager {
         arena = arena.makeRelative();
 
         try {
-            WorldEditUtils.runTask(() -> {
+            WorldEditUtils.runTask(javaPlugin, () -> {
                 buildLoader.saveSchematic(worldCuboid, arenaFolder);
                 return null;
             }).get();

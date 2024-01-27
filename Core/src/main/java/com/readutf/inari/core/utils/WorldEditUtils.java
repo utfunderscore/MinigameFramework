@@ -5,6 +5,7 @@ import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import org.bukkit.Bukkit;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
@@ -25,7 +26,7 @@ public class WorldEditUtils {
         }
     }
 
-    public static <T> CompletableFuture<T> runTask(Callable<T> runnable) {
+    public static <T> CompletableFuture<T> runTask(JavaPlugin javaPlugin, Callable<T> runnable) {
         if (isFawe) {
             try {
                 return CompletableFuture.completedFuture(runnable.call());
@@ -35,7 +36,7 @@ public class WorldEditUtils {
         } else {
 
             CompletableFuture<T> future = new CompletableFuture<>();
-            Bukkit.getScheduler().runTask(InariCore.getInstance().getJavaPlugin(), () -> {
+            Bukkit.getScheduler().runTask(javaPlugin, () -> {
                 try {
                     future.complete(runnable.call());
                 } catch (Exception e) {
