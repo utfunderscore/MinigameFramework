@@ -18,23 +18,21 @@ public class TeamBasedSpawning implements SpawnFinder {
 
     private static Logger logger = LoggerManager.getInstance().getLogger(TeamBasedSpawning.class);
 
-    private final Map<Integer, List<Location>> teamSpawns;
+    private final String prefix;
 
-    public TeamBasedSpawning(Map<Integer, List<Location>> teamSpawns) {
-        if(teamSpawns == null) throw new IllegalArgumentException("Team spawns cannot be null");
-        if(teamSpawns.isEmpty()) throw new IllegalArgumentException("Team spawns cannot be empty");
-        this.teamSpawns = teamSpawns;
+    public TeamBasedSpawning(String prefix) {
+        this.prefix = prefix;
     }
 
     @Override
     public @NotNull Location findSpawn(Game game, Player player) throws GameException {
         int teamId = game.getTeamIndex(player.getUniqueId()) + 1;
-        List<Location> spawnLocations = teamSpawns.getOrDefault(teamId, null);
+        List<Location> spawnLocations = getTeamSpawns(game.getArena()).getOrDefault(teamId, null);
+
         if(spawnLocations == null || spawnLocations.isEmpty()) {
             logger.warn("No spawn locations found for team " + teamId);
             throw new GameException("No spawn locations found for team " + teamId);
         }
-
 
         Location bestSpawn = spawnLocations.getFirst();
         int nearbyBest = Integer.MAX_VALUE;
@@ -50,7 +48,15 @@ public class TeamBasedSpawning implements SpawnFinder {
         return bestSpawn;
     }
 
-    public static TeamBasedSpawning fromArena(ActiveArena activeArena, String prefix) {
+    HashMap<ActiveArena, HashMap<Integer, List<Location>>> teamSpawnsCache = new HashMap<>();
+
+    public HashMap<Integer, List<Location>> getTeamSpawns(ActiveArena activeArena) {
+
+        HashMap<Integer, List<Location>> existingSpawns = teamSpawnsCache.get(activeArena);
+        if(existingSpawns != null) return existingSpawns;
+
+        logger.debug("No existing cache exists, finding spawns.");
+
         List<Marker> markers = activeArena.getMarkers(prefix);
         HashMap<Integer, List<Location>> teamSpawns = new HashMap<>();
 
@@ -66,7 +72,8 @@ public class TeamBasedSpawning implements SpawnFinder {
             teamSpawns.put(teamId, existing);
         }
 
-        return new TeamBasedSpawning(teamSpawns);
+        teamSpawnsCache.put(activeArena, teamSpawns);
+        return teamSpawns;
     }
 
 }
