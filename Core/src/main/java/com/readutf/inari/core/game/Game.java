@@ -114,6 +114,7 @@ public class Game {
 
         currentRound.roundStart();
         round++;
+        Bukkit.getPluginManager().callEvent(new GameRoundStart(this, currentRound));
     }
 
     public void endGame(Team winner, GameEndReason reason) {
