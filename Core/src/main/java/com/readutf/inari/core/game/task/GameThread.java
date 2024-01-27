@@ -2,6 +2,8 @@ package com.readutf.inari.core.game.task;
 
 import com.readutf.inari.core.game.Game;
 import com.readutf.inari.core.game.GameState;
+import com.readutf.inari.core.logging.Logger;
+import com.readutf.inari.core.logging.LoggerManager;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.server.MinecraftServer;
@@ -9,6 +11,8 @@ import net.minecraft.server.MinecraftServer;
 import java.util.*;
 
 public class GameThread extends TimerTask {
+
+    private static final Logger logger = LoggerManager.getInstance().getLogger(GameThread.class);
 
     private final Game game;
     private final int startTick;
@@ -44,15 +48,22 @@ public class GameThread extends TimerTask {
                 continue;
             }
 
-            if (taskInfo.isShouldRun() || MinecraftServer.currentTick - taskInfo.getStartTick() > taskInfo.getDelay()) {
-                if (taskInfo.isRepeating()) {
-                    if (MinecraftServer.currentTick - taskInfo.getStartTick() > sinceFirstTick % taskInfo.getInterval()) {
+            try {
+
+                if (taskInfo.isShouldRun() || MinecraftServer.currentTick - taskInfo.getStartTick() > taskInfo.getDelay()) {
+                    if (taskInfo.isRepeating()) {
+                        if (MinecraftServer.currentTick - taskInfo.getStartTick() > sinceFirstTick % taskInfo.getInterval()) {
+                            gameTask.run();
+                        }
+                    } else {
                         gameTask.run();
+                        gameTasks.remove(gameTask);
                     }
-                } else {
-                    gameTask.run();
-                    gameTasks.remove(gameTask);
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
+                logger.debug("Error running task " + gameTask.getClass().getSimpleName() + " in game " + game.getGameId() + " with delay " + taskInfo.getDelay() + " and interval " + taskInfo.getInterval());
+
             }
 
         }
