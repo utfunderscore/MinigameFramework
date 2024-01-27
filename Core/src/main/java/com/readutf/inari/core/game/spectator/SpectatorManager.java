@@ -20,7 +20,7 @@ import java.util.*;
 
 public class SpectatorManager {
 
-    private static final Logger logger = LoggerManager.instance.getLogger(SpectatorManager.class);
+    private static final Logger logger = LoggerManager.getInstance().getLogger(SpectatorManager.class);
 
     private final Game game;
     private final Map<UUID, SpectatorData> spectatorData;
