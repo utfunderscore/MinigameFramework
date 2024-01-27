@@ -1,6 +1,6 @@
 package com.readutf.inari.core.game.team;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.readutf.inari.core.utils.JsonIgnore;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Bukkit;
