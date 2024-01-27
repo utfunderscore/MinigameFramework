@@ -1,7 +1,7 @@
 package com.readutf.inari.core.game.spectator;
 
-import com.readutf.inari.core.InariCore;
 import com.readutf.inari.core.game.Game;
+import com.readutf.inari.core.game.events.GameRespawnEvent;
 import com.readutf.inari.core.game.events.GameSpectateEvent;
 import com.readutf.inari.core.game.exception.GameException;
 import com.readutf.inari.core.game.spawning.SpawnFinder;
@@ -10,6 +10,7 @@ import com.readutf.inari.core.logging.LoggerManager;
 import net.kyori.adventure.text.Component;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
@@ -42,11 +43,10 @@ public class SpectatorManager {
         if (player != null) {
             GameSpectateEvent event = new GameSpectateEvent(player, game, data);
             Bukkit.getPluginManager().callEvent(event);
-            if(event.isCancelled()) return false;
+            if (event.isCancelled()) return false;
         }
 
         spectatorData.put(playerId, data);
-
 
 
         if (data.isRespawn() && data.getRespawnAt() <= System.currentTimeMillis()) {
@@ -86,8 +86,10 @@ public class SpectatorManager {
 
         SpawnFinder spawnFinder = game.getPlayerSpawnFinder();
 
+
         Player player = Bukkit.getPlayer(playerId);
         if (player != null) {
+            Bukkit.getPluginManager().callEvent(new GameRespawnEvent(player, game));
 
             //spawn player
             if (teleport && spawnPlayer(spawnFinder, player)) return;
@@ -100,6 +102,7 @@ public class SpectatorManager {
         } else {
             awaitingRejoin.add(playerId);
         }
+
 
     }
 
@@ -117,21 +120,22 @@ public class SpectatorManager {
     }
 
     public void revertState(Player player) {
-       try {
-           logger.debug("Reverting state for player " + player.getName());
+        try {
+            logger.debug("Reverting state for player " + player.getName());
 
-           player.clearActivePotionEffects();
-           player.setAllowFlight(false);
-           player.setFlying(false);
-           player.setHealth(player.getMaxHealth());
+            player.clearActivePotionEffects();
+            player.setAllowFlight(false);
+            player.setFlying(false);
+            player.setHealth(player.getMaxHealth());
+            player.setGameMode(GameMode.SURVIVAL);
 
-           for (Player alivePlayer : game.getOnlinePlayers()) {
-               logger.debug("Showing player " + player.getName() + " to " + alivePlayer.getName());
-               alivePlayer.showPlayer(InariCore.getInstance().getJavaPlugin(), player);
-           }
-       } catch (Exception e) {
-           e.printStackTrace();
-       }
+            for (Player alivePlayer : game.getOnlinePlayers()) {
+                logger.debug("Showing player " + player.getName() + " to " + alivePlayer.getName());
+                alivePlayer.showPlayer(game.getJavaPlugin(), player);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void applyState(SpectatorData data, Player player, Location spawn) {

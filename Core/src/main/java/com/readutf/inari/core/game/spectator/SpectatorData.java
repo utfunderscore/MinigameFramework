@@ -7,14 +7,15 @@ import lombok.Setter;
 import java.util.ArrayList;
 import java.util.List;
 
-@Getter @Setter
+@Getter
 public class SpectatorData {
 
-    private boolean respawn;
+    private final long startTime = System.currentTimeMillis();
+    private @Setter boolean respawn;
+    private @Setter boolean canFly;
+    private @Setter List<Integer> messageIntervals;
     private long durationMillis;
     private long respawnAt;
-    private boolean canFly;
-    private List<Integer> messageIntervals;
 
     public SpectatorData(boolean respawn, long durationMillis, boolean canFly, List<Integer> messageIntervals) {
         this.respawn = respawn;
@@ -23,4 +24,10 @@ public class SpectatorData {
         this.canFly = canFly;
         this.messageIntervals = new ArrayList<>(messageIntervals);
     }
+
+    public void setDuration(int durationMillis) {
+        this.durationMillis = durationMillis;
+        this.respawnAt = startTime + durationMillis;
+    }
+
 }
