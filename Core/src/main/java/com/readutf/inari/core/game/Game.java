@@ -137,12 +137,13 @@ public class Game {
             }
 
             SpectatorData spectatorData = spectatorManager.getSpectatorData(onlinePlayer.getUniqueId());
-            if(spectatorData != null) {
+            if (spectatorData != null) {
                 spectatorManager.revertState(onlinePlayer);
             }
 
         }
 
+        arena.free();
         currentRound.roundEnd(winner);
         gameThread.cancel();
         spectatorManager.shutdown();
@@ -168,6 +169,11 @@ public class Game {
 
     public void setNextRound(Round round) {
         stages.addFirst((game, previousRound) -> round);
+    }
+
+    public void changeArena(ActiveArena arena) {
+        this.arena.free();
+        this.arena = arena;
     }
 
     public List<Player> getOnlineAndAlivePlayers() {
