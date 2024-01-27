@@ -34,7 +34,8 @@ public class GameEventManager implements Listener {
     private final JavaPlugin javaPlugin;
     private final Map<UUID, Map<Class<? extends Event>, List<GameEventListener>>> gameIdToEventMethod;
     private final Map<Class<? extends Event>, GameEventAdapter> eventAdapterMap;
-    private @Getter final List<Class<? extends Event>> activeDebugs;
+    private @Getter
+    final List<Class<? extends Event>> activeDebugs;
 
     public GameEventManager(JavaPlugin javaPlugin, GameManager gameManager) {
         this.javaPlugin = javaPlugin;
@@ -60,7 +61,7 @@ public class GameEventManager implements Listener {
 
         for (Class<? extends PlayerEvent> aClass : new Reflections("org.bukkit.event").getSubTypesOf(PlayerEvent.class)) {
             //check that class is not interface or abstract
-            if(eventAdapterMap.containsKey(aClass)) continue;
+            if (eventAdapterMap.containsKey(aClass)) continue;
             if (aClass.isInterface() || Modifier.isAbstract(aClass.getModifiers())) continue;
 
             try {
@@ -95,17 +96,18 @@ public class GameEventManager implements Listener {
                     continue;
                 }
 
-                if(!eventAdapterMap.containsKey(parameters[0])) {
+                Class<? extends Event> eventClass = parameters[0].asSubclass(Event.class);
+
+                if (findEventAdapter(eventClass) == null) {
                     logger.warn("No GameEventAdapter found for event " + parameters[0].getSimpleName());
                     continue;
                 }
 
                 GameEventHandler annotation = method.getAnnotation(GameEventHandler.class);
 
-                Class<? extends Event> eventClass = (Class<? extends Event>) parameters[0];
                 Map<Class<? extends Event>, List<GameEventListener>> eventMethodMap = gameIdToEventMethod.getOrDefault(game.getGameId(), new HashMap<>());
                 List<GameEventListener> listeners = eventMethodMap.getOrDefault(eventClass, new ArrayList<>());
-                listeners.add(new GameEventListener(object, annotation.priority(), method));
+                listeners.add(new GameEventListener(object, method, annotation));
                 eventMethodMap.put(eventClass, listeners);
                 gameIdToEventMethod.put(game.getGameId(), eventMethodMap);
             }
@@ -159,15 +161,17 @@ public class GameEventManager implements Listener {
                 logger.debug("Found " + gameListeners.size() + " listeners for event " + event.getClass().getSimpleName());
             }
 
-            gameListeners.sort(Comparator.comparingInt(GameEventListener::getPriority).reversed());
 
-            for (GameEventListener gameListener : gameListeners) {
-                try {
-                    gameListener.getMethod().invoke(gameListener.getOwner(), event);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
+            gameListeners.stream()
+                    .filter(gameEventListener -> !gameEventListener.getGameEventHandler().ignoreCancelled())
+                    .sorted(Comparator.<GameEventListener>comparingInt(value -> value.getGameEventHandler().priority()).reversed())
+                    .forEach(eventListener -> {
+                        try {
+                            eventListener.getMethod().invoke(eventListener.getOwner(), event);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    });
 
 
         }
@@ -187,18 +191,19 @@ public class GameEventManager implements Listener {
             return new ArrayList<>();
         }
 
-        public GameEventAdapter findEventAdapter(Class<? extends Event> eventClass) {
-            GameEventAdapter gameEventAdapter = eventAdapterMap.get(eventClass);
-            if (gameEventAdapter != null) {
-                return gameEventAdapter;
-            }
-            for (Class<? extends Event> aClass : eventAdapterMap.keySet()) {
-                if (aClass.isAssignableFrom(eventClass)) {
-                    return eventAdapterMap.get(aClass);
-                }
-            }
-            return null;
+    }
+
+    public GameEventAdapter findEventAdapter(Class<? extends Event> eventClass) {
+        GameEventAdapter gameEventAdapter = eventAdapterMap.get(eventClass);
+        if (gameEventAdapter != null) {
+            return gameEventAdapter;
         }
+        for (Class<? extends Event> aClass : eventAdapterMap.keySet()) {
+            if (aClass.isAssignableFrom(eventClass)) {
+                return eventAdapterMap.get(aClass);
+            }
+        }
+        return null;
     }
 
 }

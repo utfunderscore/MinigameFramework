@@ -9,7 +9,7 @@ import java.lang.reflect.Method;
 public class GameEventListener {
 
     private final Object owner;
-    private final int priority;
     private final Method method;
+    private final GameEventHandler gameEventHandler;
 
 }
