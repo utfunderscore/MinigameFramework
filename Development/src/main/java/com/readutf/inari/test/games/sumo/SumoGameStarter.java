@@ -25,31 +25,28 @@ public class SumoGameStarter implements GameStarter {
     private final GameEventManager eventManager;
 
     @Override
-    public void startGame(List<Team> teams) {
+    public Game startGame(List<Team> teams) throws Exception {
 
 
         Optional<ArenaMeta> first = arenaManager.findAvailableArenas(arenaMeta -> arenaMeta.getName().startsWith("sumo")).stream().findFirst();
-        first.ifPresent(arenaMeta -> {
-            try {
-                ActiveArena load = arenaManager.load(arenaMeta);
+        if (first.isEmpty()) {
+            throw new Exception("Could not find arena");
+        }
 
-                Game game = Game.builder(InariDemo.getInstance(), load, eventManager, teams,
-                                (game1, previousRound) -> new SumoRound(game1, (SumoRound) previousRound),
-                                (game1, previousRound) -> new SumoRound(game1, (SumoRound) previousRound),
-                                (game1, previousRound) -> new SumoRound(game1, (SumoRound) previousRound),
-                                (game1, previousRound) -> new SumoRound(game1, (SumoRound) previousRound),
-                                (game1, previousRound) -> new SumoRound(game1, (SumoRound) previousRound))
-                        .setPlayerSpawnHandler(TeamBasedSpawning.fromArena(load, "spawn"))
-                        .setSpectatorSpawnHandler(new SumoSpectatorSpawnFinder())
-                        .build();
 
-                gameManager.startGame(game);
+        ActiveArena load = arenaManager.load(first.get());
 
-            } catch (ArenaLoadException | GameException e) {
-                e.printStackTrace();
-            }
+        Game game = Game.builder(InariDemo.getInstance(), load, eventManager, teams,
+                        (game1, previousRound) -> new SumoRound(game1, (SumoRound) previousRound),
+                        (game1, previousRound) -> new SumoRound(game1, (SumoRound) previousRound),
+                        (game1, previousRound) -> new SumoRound(game1, (SumoRound) previousRound),
+                        (game1, previousRound) -> new SumoRound(game1, (SumoRound) previousRound),
+                        (game1, previousRound) -> new SumoRound(game1, (SumoRound) previousRound))
+                .setPlayerSpawnHandler(new TeamBasedSpawning("spawn"))
+                .setSpectatorSpawnHandler(new SumoSpectatorSpawnFinder())
+                .build();
 
-        });
-
+        gameManager.startGame(game);
+        return game;
     }
 }

@@ -1,0 +1,62 @@
+[21:37:38] [ServerMain/INFO]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, name=PROD]
+[21:37:38] [ServerMain/INFO]: Found new data pack file/bukkit, loading it automatically
+[21:37:38] [ServerMain/INFO]: No existing world data, creating new world
+[21:37:39] [ServerMain/INFO]: Loaded 1174 recipes
+[21:37:39] [ServerMain/INFO]: Loaded 1271 advancements
+[21:37:39] [Server thread/INFO]: Starting minecraft server version 1.20.4
+[21:37:39] [Server thread/INFO]: Loading properties
+[21:37:39] [Server thread/INFO]: This server is running Paper version git-Paper-435 (MC: 1.20.4) (Implementing API version 1.20.4-R0.1-SNAPSHOT) (Git: 681bbff)
+[21:37:40] [Server thread/INFO]: Server Ping Player Sample Count: 12
+[21:37:40] [Server thread/INFO]: Using 4 threads for Netty based IO
+[21:37:40] [Server thread/WARN]: [!] The timings profiler has been enabled but has been scheduled for removal from Paper in the future.
+    We recommend installing the spark profiler as a replacement: https://spark.lucko.me/
+    For more information please visit: https://github.com/PaperMC/Paper/issues/8948
+[21:37:40] [Server thread/INFO]: [ChunkTaskScheduler] Chunk system is using 1 I/O threads, 3 worker threads, and gen parallelism of 3 threads
+[21:37:40] [Server thread/INFO]: Default game type: SURVIVAL
+[21:37:40] [Server thread/INFO]: Generating keypair
+[21:37:40] [Server thread/INFO]: Starting Minecraft server on *:25565
+[21:37:40] [Server thread/INFO]: Using default channel type
+[21:37:40] [Server thread/INFO]: Paper: Using Java compression from Velocity.
+[21:37:40] [Server thread/INFO]: Paper: Using Java cipher from Velocity.
+[21:37:40] [Server thread/INFO]: [FastAsyncWorldEdit] Loading server plugin FastAsyncWorldEdit v2.9.1-SNAPSHOT-660;f94b96d
+[21:37:40] [Server thread/INFO]: Got request to register class com.sk89q.worldedit.bukkit.BukkitServerInterface with WorldEdit [com.sk89q.worldedit.extension.platform.PlatformManager@596dd9c6]
+[21:37:40] [Server thread/INFO]: Default configuration file written: worldedit-config.yml
+[21:37:40] [Server thread/INFO]: [InariDemo] Loading server plugin InariDemo v1.0
+[21:37:40] [Server thread/INFO]: Server permissions file permissions.yml is empty, ignoring it
+[21:37:40] [Server thread/INFO]: [FastAsyncWorldEdit] Enabling FastAsyncWorldEdit v2.9.1-SNAPSHOT-660;f94b96d
+[21:37:41] [Server thread/INFO]: [com.fastasyncworldedit.core.Fawe] LZ4 Compression Binding loaded successfully
+[21:37:41] [Server thread/INFO]: [com.fastasyncworldedit.core.Fawe] ZSTD Compression Binding loaded successfully
+[21:37:41] [Server thread/INFO]: Registering commands with com.sk89q.worldedit.bukkit.BukkitServerInterface
+[21:37:41] [Server thread/INFO]: WEPIF: Updated config file
+[21:37:41] [Server thread/INFO]: WEPIF: Using the Bukkit Permissions API.
+[21:37:41] [Server thread/INFO]: Using com.sk89q.worldedit.bukkit.adapter.impl.fawe.v1_20_R3.PaperweightFaweAdapter as the Bukkit adapter
+[21:37:41] [Server thread/INFO]: Preparing level "world"
+[21:37:43] [Server thread/INFO]: Preparing start region for dimension minecraft:overworld
+[21:37:43] [Server thread/INFO]: Time elapsed: 50 ms
+[21:37:43] [Server thread/INFO]: Preparing start region for dimension minecraft:the_nether
+[21:37:44] [Server thread/INFO]: Time elapsed: 41 ms
+[21:37:44] [Server thread/INFO]: Preparing start region for dimension minecraft:the_end
+[21:37:44] [Server thread/INFO]: Time elapsed: 34 ms
+[21:37:44] [Server thread/INFO]: [InariDemo] Enabling InariDemo v1.0
+[21:37:44] [Server thread/ERROR]: No key layers in MapLike[{}]
+[21:37:44] [Server thread/INFO]: Preparing start region for dimension minecraft:active_arenas
+[21:37:44] [Server thread/INFO]: Time elapsed: 15 ms
+[21:37:44] [Server thread/INFO]: [Inari/SchematicArenaManager] [fine] Created arenas folder
+[21:37:44] [Server thread/INFO]: [org.reflections.Reflections] Reflections took 51 ms to scan 1 urls, producing 33 keys and 56 values
+[21:37:44] [Server thread/INFO]: [org.reflections.Reflections] Reflections took 17 ms to scan 1 urls, producing 59 keys and 513 values
+[21:37:44] [Server thread/INFO]: [InariDemo] [ACF] Enabled Asynchronous Tab Completion Support!
+[21:37:44] [Server thread/INFO]: Running delayed init tasks
+[21:37:44] [Server thread/INFO]: Done (4.777s)! For help, type "help"
+[21:37:44] [Server thread/INFO]: Timings Reset
+[21:37:46] [Server thread/INFO]: Server Plugins (2):
+[21:37:46] [Server thread/INFO]: Bukkit Plugins:
+[21:37:46] [Server thread/INFO]:  - FastAsyncWorldEdit, InariDemo
+[21:37:51] [User Authenticator #0/INFO]: UUID of player utf_ is 0cd620fc-744c-45e3-b844-c7094841ce66
+[21:37:51] [Server thread/INFO]: utf_ joined the game
+[21:37:51] [Server thread/INFO]: utf_[/127.0.0.1:64616] logged in with entity id 311 at ([world]-4.5, 120.0, 2.5)
+[21:37:52] [Server thread/INFO]: utf_ issued server command: /tps
+[21:37:59] [Server thread/INFO]: Made utf_ a server operator
+[21:38:02] [Server thread/INFO]: utf_ issued server command: /pl
+[21:38:03] [Server thread/INFO]: utf_ issued server command: /tps
+[21:38:05] [Server thread/INFO]: utf_ issued server command: /gamemode creative
+[21:38:05] [Server thread/INFO]: [utf_: Set own game mode to Creative Mode]

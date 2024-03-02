@@ -9,9 +9,9 @@ import com.readutf.inari.core.event.GameEventManager;
 import com.readutf.inari.core.game.GameManager;
 import com.readutf.inari.core.game.team.Team;
 import com.readutf.inari.test.games.GameStarter;
-import com.readutf.inari.test.games.sumo.SumoGameStarter;
-import lombok.AllArgsConstructor;
+import com.readutf.inari.test.games.GameStarterManager;
 import lombok.Getter;
+import lombok.SneakyThrows;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -23,21 +23,14 @@ import java.util.Map;
 @CommandAlias("game")
 public class GameCommand extends BaseCommand {
 
-    private @Getter final Map<String, GameStarter> gameStarters;
 
-    private final ArenaManager arenaManager;
-    private final GameManager gameManager;
-    private final GameEventManager eventManager;
+    private final GameStarterManager gameStarterManager;
 
-    public GameCommand(ArenaManager arenaManager, GameManager gameManager, GameEventManager eventManager) {
-        this.arenaManager = arenaManager;
-        this.gameManager = gameManager;
-        this.eventManager = eventManager;
-        this.gameStarters = Map.of(
-                "sumo", new SumoGameStarter(arenaManager, gameManager, eventManager)
-        );
+    public GameCommand(GameStarterManager gameStarterManager) {
+        this.gameStarterManager = gameStarterManager;
     }
 
+    @SneakyThrows
     @Subcommand("start") @CommandCompletion("@games @players @players")
     public void start(Player player, String gameName, String player1Name, String player2Name) {
         Player player1 = Bukkit.getPlayer(player1Name);
@@ -48,7 +41,7 @@ public class GameCommand extends BaseCommand {
         }
 
 
-        GameStarter gameStarter = gameStarters.get(gameName.toLowerCase());
+        GameStarter gameStarter = gameStarterManager.getStarter(gameName.toLowerCase());
         if(gameStarter == null) {
             player.sendMessage("Game not found");
             return;

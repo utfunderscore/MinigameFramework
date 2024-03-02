@@ -2,6 +2,8 @@ plugins {
     id 'java'
     id 'com.github.johnrengelman.shadow' version '7.1.2'
     id 'io.papermc.paperweight.userdev' version '1.5.11'
+    id("xyz.jpenilla.run-paper") version "2.2.3" // Adds runServer and runMojangMappedServer tasks for testing
+    id("maven-publish")
 }
 
 group = 'com.readutf.inari.development'
@@ -44,6 +46,17 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.30'
     testCompileOnly 'org.projectlombok:lombok:1.18.30'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.30'
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = "com.readutf.inari"
+            artifactId = "development"
+            version = "1.0"
+            from(components["java"])
+        }
+    }
 }
 
 tasks.assemble {

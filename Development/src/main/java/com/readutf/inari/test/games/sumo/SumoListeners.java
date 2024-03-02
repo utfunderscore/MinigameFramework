@@ -80,7 +80,7 @@ public class SumoListeners {
 
 
         if (game.getAliveTeams().size() != 1) return;
-        Team winnerTeam = game.getAliveTeams().getFirst();
+        Team winnerTeam = game.getAliveTeams().get(0);
 
         final SumoRound currentRound = ((SumoRound) game.getCurrentRound());
         final Map<Team, Integer> teamScores = currentRound.getTeamScores();

@@ -34,7 +34,7 @@ public class TeamBasedSpawning implements SpawnFinder {
             throw new GameException("No spawn locations found for team " + teamId);
         }
 
-        Location bestSpawn = spawnLocations.getFirst();
+        Location bestSpawn = spawnLocations.get(0);
         int nearbyBest = Integer.MAX_VALUE;
         for (Location spawnLocation : spawnLocations) {
             int nearby = spawnLocation.getNearbyEntitiesByType(Player.class, 2).size();
