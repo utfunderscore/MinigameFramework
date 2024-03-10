@@ -1,7 +1,6 @@
 package com.readutf.inari.test;
 
 import co.aikar.commands.PaperCommandManager;
-import com.readutf.inari.core.InariCore;
 import com.readutf.inari.core.arena.ArenaManager;
 import com.readutf.inari.core.arena.marker.impl.TileEntityScanner;
 import com.readutf.inari.core.arena.selection.impl.WorldEditSelectionManager;
