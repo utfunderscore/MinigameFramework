@@ -1,8 +1,12 @@
 package com.readutf.inari.test.utils;
 
 import com.readutf.inari.core.game.Game;
+import com.readutf.inari.core.game.GameState;
+import com.readutf.inari.core.game.stage.Round;
 import com.readutf.inari.core.game.task.GameTask;
 import net.minecraft.server.MinecraftServer;
+import org.bukkit.event.Cancellable;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
 
@@ -10,7 +14,11 @@ public class Countdown extends GameTask {
 
     private final Game game;
     private final int duration;
-    private final Consumer<Integer> timeConsumer;
+    private final CancellableTask<Integer> timeConsumer;
+
+    private int startTime = MinecraftServer.currentTick;
+    private Round round;
+
 
     /**
      * Create a new countdown that's automatically submitted to the game thread
@@ -18,24 +26,38 @@ public class Countdown extends GameTask {
      * @param duration the duration in seconds
      * @param timeConsumer the consumer that will be called every second
      */
-    public Countdown(Game game, int duration, Consumer<Integer> timeConsumer) {
+    public Countdown(Game game, int duration, CancellableTask<Integer> timeConsumer) {
         this.game = game;
-        this.duration = duration+1;
+        this.round = null;
+        this.duration = duration + 1;
         this.timeConsumer = timeConsumer;
+        timeConsumer.setCancelTaskRunnable(this::cancel);
         game.getGameThread().submitRepeatingTask(this, 0, 20);
     }
 
-    private int startTime = MinecraftServer.currentTick;
-
     @Override
     public void run() {
-        int sinceStart = MinecraftServer.currentTick - startTime;
+        if (game.getGameState() == GameState.ENDED) {
 
-        if((sinceStart-1) % 20 == 0) {
-            timeConsumer.accept((duration - (sinceStart / 20)));
+            System.out.println("Game ended");
+            cancel();
+            return;
+
+        } else if (round != null && game.getCurrentRound() != round) {
+            System.out.println("Round ended");
+            System.out.println(game.getCurrentRound());
+            System.out.println(round);
+            cancel();
+            return;
         }
 
-        if(sinceStart > duration * 20) {
+        int sinceStart = MinecraftServer.currentTick - startTime;
+
+        if ((sinceStart - 1) % 20 == 0) {
+            timeConsumer.run((duration - (sinceStart / 20)));
+        }
+
+        if (sinceStart > duration * 20) {
             cancel();
         }
     }

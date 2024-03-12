@@ -13,6 +13,7 @@ import com.readutf.inari.core.game.events.GameRoundStart;
 import com.readutf.inari.core.game.events.GameStartEvent;
 import com.readutf.inari.core.game.exception.GameException;
 import com.readutf.inari.core.game.lang.DefaultGameLang;
+import com.readutf.inari.core.game.rejoin.RejoinListeners;
 import com.readutf.inari.core.game.spawning.SpawnFinder;
 import com.readutf.inari.core.game.spectator.SpectatorData;
 import com.readutf.inari.core.game.spectator.SpectatorListeners;
@@ -85,7 +86,8 @@ public class Game {
         Arrays.asList(
                 new TestListener(),
                 new DeathListeners(deathManager),
-                new SpectatorListeners(this)
+                new SpectatorListeners(this),
+                new RejoinListeners(this)
         ).forEach(this::registerListeners);
     }
 
@@ -99,12 +101,16 @@ public class Game {
     }
 
     public void endRound(@Nullable Team winner) {
+        if (!Bukkit.isPrimaryThread()) {
+            throw new IllegalStateException("endRound must be called from the main thread");
+        }
 
         currentRound.roundEnd(winner);
 
         try {
             startNextRound();
-        } catch (Exception ignored) {
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }
 
@@ -169,12 +175,22 @@ public class Game {
 
     }
 
+    public void messageAll(Component component) {
+        for (Player onlinePlayer : getOnlinePlayers()) {
+            onlinePlayer.sendMessage(component);
+        }
+    }
+
     public void killPlayer(Player player) {
         deathManager.killPlayer(player);
     }
 
     public void registerListeners(Object object) {
         gameEventManager.scanForListeners(this, object);
+    }
+
+    public void unregisterListeners(Object object) {
+        gameEventManager.unregisterListeners(this, object);
     }
 
     public void setNextRound(Round round) {

@@ -43,7 +43,7 @@ public class InariDemo extends JavaPlugin {
         paperCommandManager.registerCommand(new ArenaCommands(this, worldEditSelectionManager, arenaManager));
         paperCommandManager.registerCommand(new DevCommand(gameManager, arenaManager, gameEventManager));
         paperCommandManager.registerCommand(new EventDebugCommand(gameEventManager));
-        GameStarterManager gameStarterManager = new GameStarterManager(arenaManager, gameManager, gameEventManager);
+        this.gameStarterManager = new GameStarterManager(arenaManager, gameManager, gameEventManager);
         GameCommand gameCommand = new GameCommand(gameStarterManager);
         paperCommandManager.registerCommand(gameCommand);
 

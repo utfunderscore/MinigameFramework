@@ -2,18 +2,19 @@ package com.readutf.inari.test.games.sumo;
 
 import com.readutf.inari.core.event.GameEventHandler;
 import com.readutf.inari.core.game.Game;
-import com.readutf.inari.core.game.GameEndReason;
 import com.readutf.inari.core.game.events.GameDeathEvent;
 import com.readutf.inari.core.game.events.GameSpectateEvent;
 import com.readutf.inari.core.game.events.GameStartEvent;
 import com.readutf.inari.core.game.exception.GameException;
 import com.readutf.inari.core.game.spawning.SpawnFinder;
 import com.readutf.inari.core.game.spectator.SpectatorData;
-import com.readutf.inari.core.game.stage.Round;
 import com.readutf.inari.core.game.team.Team;
+import com.readutf.inari.core.logging.Logger;
+import com.readutf.inari.core.logging.LoggerManager;
+import com.readutf.inari.core.utils.ColorUtils;
 import com.readutf.inari.core.utils.Position;
 import com.readutf.inari.test.InariDemo;
-import com.readutf.inari.core.utils.ColorUtils;
+import com.readutf.inari.test.utils.CancellableTask;
 import com.readutf.inari.test.utils.Countdown;
 import com.readutf.inari.test.utils.ThreadUtils;
 import lombok.RequiredArgsConstructor;
@@ -24,8 +25,8 @@ import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
-import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -35,6 +36,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class SumoListeners {
 
+    private final Logger logger = LoggerManager.getInstance().getLogger(SumoListeners.class);
     private final Game game;
 
     @GameEventHandler
@@ -75,11 +77,17 @@ public class SumoListeners {
 
     }
 
-    @GameEventHandler(ignoreCancelled = true)
+    @GameEventHandler()
     public void onDeath(GameDeathEvent e) {
 
+        logger.debug("Player " + e.getPlayer().getName() + " has died");
 
-        if (game.getAliveTeams().size() != 1) return;
+        if (game.getAliveTeams().size() != 1) {
+            logger.fine("Not ending round, teams alive: " + game.getAliveTeams().size() + " " + game.getAliveTeams());
+            return;
+        }
+
+
         Team winnerTeam = game.getAliveTeams().get(0);
 
         final SumoRound currentRound = ((SumoRound) game.getCurrentRound());
@@ -93,28 +101,31 @@ public class SumoListeners {
         teamScores.put(winnerTeam, newScore);
 
 
-        new Countdown(game, 3, integer -> {
+        new Countdown(game, 3, new CancellableTask<>() {
+            @Override
+            public void run(Integer integer) {
 
 
-            if (integer == 3) {
+                if (integer == 3) {
 
-                for (Player onlinePlayer : game.getOnlinePlayers()) {
-                    onlinePlayer.showTitle(getScoreTitle(teamScores, winnerTeam));
-                    onlinePlayer.playSound(onlinePlayer.getLocation(), Sound.BLOCK_BAMBOO_WOOD_BUTTON_CLICK_ON, 5, 1);
-                }
-            }
-
-
-            if (integer == 0) {
-                for (Player onlinePlayer : game.getOnlinePlayers()) {
-                    onlinePlayer.clearTitle();
+                    for (Player onlinePlayer : game.getOnlinePlayers()) {
+                        onlinePlayer.showTitle(getScoreTitle(teamScores, winnerTeam));
+                        onlinePlayer.playSound(onlinePlayer.getLocation(), Sound.BLOCK_BAMBOO_WOOD_BUTTON_CLICK_ON, 5, 1);
+                    }
                 }
 
-                if (newScore > 2) {
-                    game.setNextRound(new SumoEndRound(game, currentRound, winnerTeam));
-                }
 
-                ThreadUtils.ensureSync(() -> game.endRound(winnerTeam));
+                if (integer == 0) {
+                    for (Player onlinePlayer : game.getOnlinePlayers()) {
+                        onlinePlayer.clearTitle();
+                    }
+
+                    if (newScore > 2) {
+                        game.setNextRound(new SumoEndRound(game, currentRound, winnerTeam));
+                    }
+
+                    ThreadUtils.ensureSync(() -> game.endRound(winnerTeam));
+                }
             }
         });
     }
@@ -123,8 +134,7 @@ public class SumoListeners {
     public void onMove(PlayerMoveEvent e) {
 
 
-
-        if(!(game.getCurrentRound() instanceof SumoRound sumoRound)) return;
+        if (!(game.getCurrentRound() instanceof SumoRound sumoRound)) return;
 
 
         //has player moved full block
@@ -147,6 +157,11 @@ public class SumoListeners {
             return;
         }
 
+    }
+
+    @GameEventHandler
+    public void onQuit(PlayerQuitEvent e) {
+        game.killPlayer(e.getPlayer());
     }
 
     public Title getScoreTitle(Map<Team, Integer> teamScores, Team upArrowTeam) {

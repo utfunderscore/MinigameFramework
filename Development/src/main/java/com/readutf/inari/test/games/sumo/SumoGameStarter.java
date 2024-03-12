@@ -12,6 +12,7 @@ import com.readutf.inari.core.game.spawning.impl.TeamBasedSpawning;
 import com.readutf.inari.core.game.team.Team;
 import com.readutf.inari.test.InariDemo;
 import com.readutf.inari.test.games.GameStarter;
+import com.readutf.inari.test.games.shared.AwaitingPlayersStage;
 import lombok.AllArgsConstructor;
 
 import java.util.List;
@@ -36,17 +37,18 @@ public class SumoGameStarter implements GameStarter {
 
         ActiveArena load = arenaManager.load(first.get());
 
-        Game game = Game.builder(InariDemo.getInstance(), load, eventManager, teams,
-                        (game1, previousRound) -> new SumoRound(game1, (SumoRound) previousRound),
-                        (game1, previousRound) -> new SumoRound(game1, (SumoRound) previousRound),
-                        (game1, previousRound) -> new SumoRound(game1, (SumoRound) previousRound),
-                        (game1, previousRound) -> new SumoRound(game1, (SumoRound) previousRound),
-                        (game1, previousRound) -> new SumoRound(game1, (SumoRound) previousRound))
+        Game createdMatch = Game.builder(InariDemo.getInstance(), load, eventManager, teams,
+                        (game, previousRound) -> new AwaitingPlayersStage(game, 2, 60),
+                        (game, previousRound) -> new SumoRound(game, null),
+                        (game, previousRound) -> new SumoRound(game, (SumoRound) previousRound),
+                        (game, previousRound) -> new SumoRound(game, (SumoRound) previousRound),
+                        (game, previousRound) -> new SumoRound(game, (SumoRound) previousRound),
+                        (game, previousRound) -> new SumoRound(game, (SumoRound) previousRound))
                 .setPlayerSpawnHandler(new TeamBasedSpawning("spawn"))
                 .setSpectatorSpawnHandler(new SumoSpectatorSpawnFinder())
                 .build();
 
-        gameManager.startGame(game);
-        return game;
+        gameManager.startGame(createdMatch);
+        return createdMatch;
     }
 }

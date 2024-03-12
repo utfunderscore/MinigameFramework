@@ -5,6 +5,7 @@ import com.readutf.inari.core.game.GameEndReason;
 import com.readutf.inari.core.game.stage.Round;
 import com.readutf.inari.core.game.team.Team;
 import com.readutf.inari.core.utils.ColorUtils;
+import com.readutf.inari.test.utils.CancellableTask;
 import com.readutf.inari.test.utils.Countdown;
 import com.readutf.inari.test.utils.ThreadUtils;
 import net.kyori.adventure.title.Title;
@@ -52,8 +53,12 @@ public class SumoEndRound implements Round {
             ));
         }
 
-        new Countdown(game, 5, integer -> {
-            if(integer == 0) ThreadUtils.ensureSync(() -> game.endGame(winningTeam, GameEndReason.ENEMIES_ELIMINATED));
+        new Countdown(game, 5,new CancellableTask<>() {
+            @Override
+            public void run(Integer integer) {
+                if (integer == 0)
+                    ThreadUtils.ensureSync(() -> game.endGame(winningTeam, GameEndReason.ENEMIES_ELIMINATED));
+            }
         });
 
 

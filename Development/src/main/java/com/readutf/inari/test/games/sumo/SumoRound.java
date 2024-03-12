@@ -6,6 +6,7 @@ import com.readutf.inari.core.game.team.Team;
 import com.readutf.inari.core.utils.ColorUtils;
 import com.readutf.inari.core.utils.Cuboid;
 import com.readutf.inari.test.games.shared.BuildPreventionListeners;
+import com.readutf.inari.test.utils.CancellableTask;
 import com.readutf.inari.test.utils.Countdown;
 import com.readutf.inari.test.utils.ThreadUtils;
 import lombok.Getter;
@@ -54,7 +55,8 @@ public class SumoRound implements Round {
         this.game = game;
         this.roundNumber = previousRound == null ? 1 : previousRound.getRoundNumber() + 1;
         this.teamScores = previousRound == null ? new HashMap<>() : new HashMap<>(previousRound.getTeamScores());
-        if(previousRound == null) {
+        if (previousRound == null) {
+
             game.registerListeners(new SumoListeners(game));
             game.registerListeners(new BuildPreventionListeners(true, true));
             for (Team aliveTeam : game.getAliveTeams()) teamScores.put(aliveTeam, 0);
@@ -71,22 +73,34 @@ public class SumoRound implements Round {
             onlinePlayer.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 1000000, 150, false, false, false));
         }
 
-        countdown = new Countdown(game, 5, timeLeft -> {
 
-            float pitch = intervalToPitch.getOrDefault(timeLeft, -1f);
-            if (pitch != -1)
-                game.getOnlinePlayers().forEach(player -> player.playSound(player, Sound.BLOCK_NOTE_BLOCK_HARP, 10f, pitch));
+        CancellableTask<Integer> task = new CancellableTask<>() {
 
-            Title title = intervalToTitle.get(timeLeft);
-            if (title != null) game.getOnlinePlayers().forEach(player -> player.showTitle(title));
+            @Override
+            public void run(Integer integer) {
 
-            if (countdownIntervals.contains(timeLeft)) {
-                game.messageAlive(ColorUtils.color("&7Round starting in &a" + timeLeft + " &7seconds"));
             }
+        };
 
-            if (timeLeft == 0) {
-                countdownEnd();
-                game.messageAlive(ColorUtils.color("&7Round &a" + roundNumber + " &7has started!"));
+        countdown = new Countdown(game, 5, new CancellableTask<>() {
+            @Override
+            public void run(Integer timeLeft) {
+
+                float pitch = intervalToPitch.getOrDefault(timeLeft, -1f);
+                if (pitch != -1)
+                    game.getOnlinePlayers().forEach(player -> player.playSound(player, Sound.BLOCK_NOTE_BLOCK_HARP, 10f, pitch));
+
+                Title title = intervalToTitle.get(timeLeft);
+                if (title != null) game.getOnlinePlayers().forEach(player -> player.showTitle(title));
+
+                if (countdownIntervals.contains(timeLeft)) {
+                    game.messageAlive(ColorUtils.color("&7Round starting in &a" + timeLeft + " &7seconds"));
+                }
+
+                if (timeLeft == 0) {
+                    countdownEnd();
+                    game.messageAlive(ColorUtils.color("&7Round &a" + roundNumber + " &7has started!"));
+                }
             }
         });
 

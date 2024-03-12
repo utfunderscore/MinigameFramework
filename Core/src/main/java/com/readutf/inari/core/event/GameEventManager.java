@@ -116,6 +116,15 @@ public class GameEventManager implements Listener {
 
     }
 
+    public void unregisterListeners(Game game, Object object) {
+
+        Map<Class<? extends Event>, List<GameEventListener>> gameListeners = new HashMap<>(gameIdToEventMethod.getOrDefault(game.getGameId(), new HashMap<>()));
+
+        gameListeners.forEach((aClass, gameEventListeners) -> gameEventListeners.removeIf(eventListener -> eventListener.getOwner() == object));
+
+
+    }
+
     public void unregisterGame(Game game) {
         gameIdToEventMethod.remove(game.getGameId());
     }

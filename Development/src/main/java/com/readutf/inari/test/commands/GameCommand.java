@@ -14,6 +14,7 @@ import lombok.Getter;
 import lombok.SneakyThrows;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
 import java.util.Collections;
@@ -33,12 +34,8 @@ public class GameCommand extends BaseCommand {
     @SneakyThrows
     @Subcommand("start") @CommandCompletion("@games @players @players")
     public void start(Player player, String gameName, String player1Name, String player2Name) {
-        Player player1 = Bukkit.getPlayer(player1Name);
-        Player player2 = Bukkit.getPlayer(player2Name);
-        if(player1 == null || player2 == null) {
-            player.sendMessage("Player not found");
-            return;
-        }
+        OfflinePlayer player1 = Bukkit.getOfflinePlayer(player1Name);
+        OfflinePlayer player2 = Bukkit.getOfflinePlayer(player2Name);
 
 
         GameStarter gameStarter = gameStarterManager.getStarter(gameName.toLowerCase());
