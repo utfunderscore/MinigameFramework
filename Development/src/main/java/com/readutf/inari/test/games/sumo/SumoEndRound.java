@@ -53,7 +53,7 @@ public class SumoEndRound implements Round {
             ));
         }
 
-        new Countdown(game, 5,new CancellableTask<>() {
+        new Countdown(game, 5, new CancellableTask<>() {
             @Override
             public void run(Integer integer) {
                 if (integer == 0)

@@ -2,8 +2,9 @@ package com.readutf.inari.core.arena.marker.impl;
 
 import com.readutf.inari.core.arena.marker.Marker;
 import com.readutf.inari.core.arena.marker.MarkerScanner;
+import com.readutf.inari.core.logging.GameLoggerFactory;
 import com.readutf.inari.core.logging.Logger;
-import com.readutf.inari.core.logging.LoggerManager;
+import com.readutf.inari.core.logging.LoggerFactory;
 import com.readutf.inari.core.utils.WorldCuboid;
 import org.bukkit.Chunk;
 import org.bukkit.World;
@@ -16,7 +17,7 @@ import java.util.List;
 
 public class TileEntityScanner implements MarkerScanner {
 
-    private static Logger logger = LoggerManager.getInstance().getLogger(TileEntityScanner.class);
+    private static Logger logger = LoggerFactory.getLogger(TileEntityScanner.class);
 
     @Override
     public List<Marker> scan(WorldCuboid worldCuboid) {

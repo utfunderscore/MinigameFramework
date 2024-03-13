@@ -1,36 +1,17 @@
 package com.readutf.inari.core.logging;
 
-import org.apache.logging.log4j.LogManager;
+public interface Logger {
 
-public class Logger {
+    void info(String message);
 
-    private final String name;
-    private final boolean enabled;
-    private final LoggerManager loggerManager;
+    void warn(String message);
 
-    private final org.apache.logging.log4j.Logger logger;
+    void error(String message);
 
-    public Logger(String name, boolean enabled, LoggerManager loggerManager) {
-        this.name = name;
-        this.enabled = enabled;
-        this.loggerManager = loggerManager;
-        this.logger = LogManager.getLogger("Inari/" + name);
-    }
+    void error(String message, Throwable throwable);
 
-    public void debug(String message) {
-        logger.info("[debug] " + message);
-    }
+    void debug(String message);
 
-    public void fine(String message) {
-        logger.info("[fine] " + message);
-    }
 
-    public void warn(String message) {
-        logger.info("[warn] " + message);
-    }
-
-    public void error(Exception e) {
-        e.printStackTrace();
-    }
 
 }

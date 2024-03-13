@@ -1,5 +1,11 @@
 [
   {
+    "uuid": "c0fdb1aa-567a-4257-abb6-c85dc8240c2c",
+    "name": "COVlD",
+    "level": 4,
+    "bypassesPlayerLimit": false
+  },
+  {
     "uuid": "0cd620fc-744c-45e3-b844-c7094841ce66",
     "name": "utf_",
     "level": 4,

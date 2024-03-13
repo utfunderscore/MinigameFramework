@@ -2,6 +2,7 @@ package com.readutf.inari.test.games.sumo;
 
 import com.readutf.inari.core.event.GameEventHandler;
 import com.readutf.inari.core.game.Game;
+import com.readutf.inari.core.game.GameEndReason;
 import com.readutf.inari.core.game.events.GameDeathEvent;
 import com.readutf.inari.core.game.events.GameSpectateEvent;
 import com.readutf.inari.core.game.events.GameStartEvent;
@@ -9,15 +10,14 @@ import com.readutf.inari.core.game.exception.GameException;
 import com.readutf.inari.core.game.spawning.SpawnFinder;
 import com.readutf.inari.core.game.spectator.SpectatorData;
 import com.readutf.inari.core.game.team.Team;
+import com.readutf.inari.core.logging.GameLoggerFactory;
 import com.readutf.inari.core.logging.Logger;
-import com.readutf.inari.core.logging.LoggerManager;
 import com.readutf.inari.core.utils.ColorUtils;
 import com.readutf.inari.core.utils.Position;
 import com.readutf.inari.test.InariDemo;
 import com.readutf.inari.test.utils.CancellableTask;
 import com.readutf.inari.test.utils.Countdown;
 import com.readutf.inari.test.utils.ThreadUtils;
-import lombok.RequiredArgsConstructor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Location;
@@ -33,11 +33,15 @@ import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@RequiredArgsConstructor
 public class SumoListeners {
 
-    private final Logger logger = LoggerManager.getInstance().getLogger(SumoListeners.class);
     private final Game game;
+    private final Logger logger;
+
+    public SumoListeners(Game game) {
+        this.game = game;
+        this.logger = game.getLoggerFactory().getLogger(SumoListeners.class);
+    }
 
     @GameEventHandler
     public void onGameStart(GameStartEvent gameStartEvent) {
@@ -65,7 +69,7 @@ public class SumoListeners {
         if (game.getCurrentRound() instanceof SumoEndRound || game.getAliveTeams().size() == 1) {
             e.setCancelled(true);
             SpawnFinder spawnFinder = game.getPlayerSpawnFinder();
-            Location spawn = spawnFinder.findSpawn(game, player);
+            Location spawn = spawnFinder.findSpawn(player);
             player.teleport(spawn);
             return;
         }
@@ -83,7 +87,7 @@ public class SumoListeners {
         logger.debug("Player " + e.getPlayer().getName() + " has died");
 
         if (game.getAliveTeams().size() != 1) {
-            logger.fine("Not ending round, teams alive: " + game.getAliveTeams().size() + " " + game.getAliveTeams());
+            logger.info("Not ending round, teams alive: " + game.getAliveTeams().size() + " " + game.getAliveTeams());
             return;
         }
 
@@ -162,6 +166,14 @@ public class SumoListeners {
     @GameEventHandler
     public void onQuit(PlayerQuitEvent e) {
         game.killPlayer(e.getPlayer());
+
+        System.out.println("added with debug");
+
+        if(game.getAliveTeams().size() == 1) {
+            game.endGame(game.getAliveTeams().getFirst(), GameEndReason.ENEMIES_ELIMINATED);
+        } else if(game.getAliveTeams().isEmpty()) {
+            game.endGame(null, GameEndReason.DRAW);
+        }
     }
 
     public Title getScoreTitle(Map<Team, Integer> teamScores, Team upArrowTeam) {

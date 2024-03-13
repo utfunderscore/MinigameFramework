@@ -2,6 +2,7 @@ package com.readutf.inari.core.game;
 
 import com.readutf.inari.core.game.exception.GameException;
 import lombok.Getter;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.util.Collection;
@@ -24,6 +25,11 @@ public class GameManager {
     }
 
     public void startGame(Game game) throws GameException {
+
+        if(!Bukkit.isPrimaryThread()) {
+            throw new GameException("Game must be started on the main thread.");
+        }
+
         idToGame.put(game.getGameId(), game);
         for (UUID allPlayer : game.getAllPlayers()) {
             playerToGame.put(allPlayer, game);

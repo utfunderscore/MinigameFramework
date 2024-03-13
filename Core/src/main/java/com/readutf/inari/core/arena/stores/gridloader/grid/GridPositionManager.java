@@ -1,14 +1,15 @@
 package com.readutf.inari.core.arena.stores.gridloader.grid;
 
+import com.readutf.inari.core.logging.GameLoggerFactory;
 import com.readutf.inari.core.logging.Logger;
-import com.readutf.inari.core.logging.LoggerManager;
+import com.readutf.inari.core.logging.LoggerFactory;
 import lombok.Getter;
 
 import java.util.ArrayDeque;
 
 public class GridPositionManager {
 
-    private static Logger logger = LoggerManager.getInstance().getLogger(GridPositionManager.class);
+    private static Logger logger = LoggerFactory.getLogger(GridPositionManager.class);
 
     private final ArrayDeque<GridSpace> recentlyFreed = new ArrayDeque<>();
     private final int spaceBetween;

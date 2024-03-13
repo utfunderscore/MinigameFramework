@@ -8,7 +8,6 @@ import com.readutf.inari.core.game.exception.GameException;
 import com.readutf.inari.core.game.stage.Round;
 import com.readutf.inari.core.game.team.Team;
 import com.readutf.inari.core.logging.Logger;
-import com.readutf.inari.core.logging.LoggerManager;
 import com.readutf.inari.core.utils.ColorUtils;
 import com.readutf.inari.test.utils.CancellableTask;
 import com.readutf.inari.test.utils.Countdown;
@@ -19,13 +18,14 @@ import org.jetbrains.annotations.Nullable;
 
 public class AwaitingPlayersStage implements Round {
 
-    private static final Logger logger = LoggerManager.getInstance().getLogger(AwaitingPlayersStage.class);
 
     private final Game game;
+    private final Logger logger;
     private final int targetPlayers, gameExpireTimeSeconds;
 
     public AwaitingPlayersStage(Game game, int targetPlayers, int gameExpireTimeSeconds) {
         this.game = game;
+        this.logger = game.getLoggerFactory().getLogger(AwaitingPlayersStage.class);
         this.targetPlayers = targetPlayers;
         this.gameExpireTimeSeconds = gameExpireTimeSeconds;
         game.registerListeners(this);
@@ -50,6 +50,12 @@ public class AwaitingPlayersStage implements Round {
                 if (!hasRoundEnded()) {
                     game.endRound(null);
                 }
+
+                if (integer == 0) {
+                    cancel();
+                    ThreadUtils.ensureSync(() -> game.endGame(null, GameEndReason.CANCELLED));
+                }
+
             }
 
 
@@ -62,15 +68,13 @@ public class AwaitingPlayersStage implements Round {
 
         Player player = e.getPlayer();
         try {
-            player.teleport(game.getPlayerSpawnFinder().findSpawn(game, player));
+            player.teleport(game.getPlayerSpawnFinder().findSpawn(player));
         } catch (GameException ex) {
             ex.printStackTrace();
         }
 
         int online = game.getOnlinePlayers().size();
         game.messageAll(ColorUtils.color("&a%s &7has joined the game. &e(%s/%s) ".formatted(player.getName(), online, targetPlayers)));
-
-        checkForValidPlayers(online);
     }
 
     private boolean checkForValidPlayers(int online) {

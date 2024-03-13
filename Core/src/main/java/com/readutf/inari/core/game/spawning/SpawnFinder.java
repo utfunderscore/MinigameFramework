@@ -11,6 +11,6 @@ import java.util.UUID;
 
 public interface SpawnFinder {
 
-    @NotNull Location findSpawn(Game game, Player player) throws GameException;
+    @NotNull Location findSpawn(Player player) throws GameException;
 
 }

@@ -5,8 +5,8 @@ import com.readutf.inari.core.game.events.GameRespawnEvent;
 import com.readutf.inari.core.game.events.GameSpectateEvent;
 import com.readutf.inari.core.game.exception.GameException;
 import com.readutf.inari.core.game.spawning.SpawnFinder;
+import com.readutf.inari.core.logging.GameLoggerFactory;
 import com.readutf.inari.core.logging.Logger;
-import com.readutf.inari.core.logging.LoggerManager;
 import net.kyori.adventure.text.Component;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
@@ -21,9 +21,9 @@ import java.util.*;
 
 public class SpectatorManager {
 
-    private static final Logger logger = LoggerManager.getInstance().getLogger(SpectatorManager.class);
 
     private final Game game;
+    private final Logger logger;
     private final Map<UUID, SpectatorData> spectatorData;
     private final List<UUID> awaitingRejoin = new ArrayList<>();
     private final SpectatorTask spectatorTask;
@@ -31,6 +31,7 @@ public class SpectatorManager {
     public SpectatorManager(Game game) {
         this.spectatorData = new HashMap<>();
         this.game = game;
+        this.logger = game.getLoggerFactory().getLogger(SpectatorManager.class);
         (spectatorTask = new SpectatorTask(game)).runTaskTimer(game.getJavaPlugin(), 0, 1);
     }
 
@@ -58,9 +59,9 @@ public class SpectatorManager {
 
             Location spawn;
             try {
-                spawn = game.getSpectatorSpawnFinder().findSpawn(game, player);
+                spawn = game.getSpectatorSpawnFinder().findSpawn(player);
             } catch (GameException e) {
-                e.printStackTrace();
+                logger.error("Failed to find a spawn location for player " + player.getName(), e);
                 player.sendMessage(ChatColor.RED + "Failed to find a spawn location for you.");
                 return true;
             }
@@ -109,7 +110,7 @@ public class SpectatorManager {
     private boolean spawnPlayer(SpawnFinder spawnFinder, Player player) {
         Location spawn;
         try {
-            spawn = spawnFinder.findSpawn(game, player);
+            spawn = spawnFinder.findSpawn(player);
         } catch (GameException e) {
             e.printStackTrace();
             player.sendMessage(ChatColor.RED + "Failed to find a spawn location for you.");

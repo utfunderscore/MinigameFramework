@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.readutf.inari.core.arena.ActiveArena;
 import com.readutf.inari.core.event.GameEventManager;
 import com.readutf.inari.core.game.spawning.SpawnFinder;
+import com.readutf.inari.core.game.spawning.SpawnFinderFactory;
 import com.readutf.inari.core.game.stage.RoundCreator;
 import com.readutf.inari.core.game.team.Team;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -26,13 +27,13 @@ public class GameBuilder {
         this.game = gameCreator.create();
     }
 
-    public GameBuilder setPlayerSpawnHandler( SpawnFinder spawnFinder) {
-        game.setPlayerSpawnFinder(spawnFinder);
+    public GameBuilder setPlayerSpawnHandler( SpawnFinderFactory spawnFinderFactory) {
+        game.setPlayerSpawnFinder(spawnFinderFactory.create(game));
         return this;
     }
 
-    public GameBuilder setSpectatorSpawnHandler( SpawnFinder spawnFinder) {
-        game.setSpectatorSpawnFinder(spawnFinder);
+    public GameBuilder setSpectatorSpawnHandler( SpawnFinderFactory spawnFinderFactory) {
+        game.setSpectatorSpawnFinder(spawnFinderFactory.create(game));
         return this;
     }
 

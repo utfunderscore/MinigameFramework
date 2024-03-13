@@ -17,7 +17,7 @@ settings:
   restart-on-crash: true
   restart-script: ./start.sh
   sample-count: 12
-  bungeecord: false
+  bungeecord: true
   player-shuffle: 0
   netty-threads: 4
   user-cache-size: 1000

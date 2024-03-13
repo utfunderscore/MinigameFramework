@@ -5,8 +5,8 @@ import com.readutf.inari.core.arena.marker.Marker;
 import com.readutf.inari.core.game.Game;
 import com.readutf.inari.core.game.exception.GameException;
 import com.readutf.inari.core.game.spawning.SpawnFinder;
+import com.readutf.inari.core.logging.GameLoggerFactory;
 import com.readutf.inari.core.logging.Logger;
-import com.readutf.inari.core.logging.LoggerManager;
 import com.readutf.inari.core.utils.NumberUtils;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -16,16 +16,18 @@ import java.util.*;
 
 public class TeamBasedSpawning implements SpawnFinder {
 
-    private static Logger logger = LoggerManager.getInstance().getLogger(TeamBasedSpawning.class);
-
+    private final Game game;
     private final String prefix;
+    private final Logger logger;
 
-    public TeamBasedSpawning(String prefix) {
+    public TeamBasedSpawning(Game game, String prefix) {
+        this.game = game;
         this.prefix = prefix;
+        this.logger = game.getLoggerFactory().getLogger(TeamBasedSpawning.class);
     }
 
     @Override
-    public @NotNull Location findSpawn(Game game, Player player) throws GameException {
+    public @NotNull Location findSpawn(Player player) throws GameException {
         int teamId = game.getTeamIndex(player.getUniqueId()) + 1;
         List<Location> spawnLocations = getTeamSpawns(game.getArena()).getOrDefault(teamId, null);
 

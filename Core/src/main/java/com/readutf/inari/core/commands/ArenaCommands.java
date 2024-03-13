@@ -62,7 +62,7 @@ public class ArenaCommands extends BaseCommand {
 
                     player.sendMessage(ChatColor.GREEN + "Loaded arena " + arenaMeta.getName());
 
-                    player.teleport(arena.getBounds().getMin().toLocation(SchematicArenaManager.getWorld()));
+//                    player.teleport(arena.getBounds().getMin().toLocation(SchematicArenaManager.getWorld()));
 
                     new BukkitRunnable() {
                         @Override

@@ -1,4 +1,6 @@
 rootProject.name = 'Inari'
 include 'Core'
 include 'Development'
+include 'InariStom'
+include 'InariStom'
 

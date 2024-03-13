@@ -16,8 +16,6 @@ gradle-app.setting
 .idea/*
 gradle/*
 
-Core/build/*
-Development/build/*
-Core/build/
-
-Development/build/
+Development/run/*
+Core/run/*
+*/build/*

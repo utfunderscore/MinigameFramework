@@ -13,8 +13,14 @@ import java.util.UUID;
 
 public class SumoSpectatorSpawnFinder implements SpawnFinder {
 
+    private final Game game;
+
+    public SumoSpectatorSpawnFinder(Game game) {
+        this.game = game;
+    }
+
     @Override
-    public @NotNull Location findSpawn(Game game, Player player) throws GameException {
+    public @NotNull Location findSpawn(Player player) throws GameException {
         UUID lastDamager = game.getDeathManager().getLastDamager(player.getUniqueId());
         Player lastDamagerPlayer = lastDamager == null ? null : Bukkit.getPlayer(lastDamager);
         return Objects.requireNonNullElse(lastDamagerPlayer, player).getLocation().add(0, 2, 0);

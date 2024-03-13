@@ -3,6 +3,7 @@ package com.readutf.inari.core.game;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
+import com.readutf.inari.core.InariCore;
 import com.readutf.inari.core.arena.ActiveArena;
 import com.readutf.inari.core.event.GameEventManager;
 import com.readutf.inari.core.event.testlistener.TestListener;
@@ -22,6 +23,8 @@ import com.readutf.inari.core.game.stage.Round;
 import com.readutf.inari.core.game.stage.RoundCreator;
 import com.readutf.inari.core.game.task.GameThread;
 import com.readutf.inari.core.game.team.Team;
+import com.readutf.inari.core.logging.GameLoggerFactory;
+import com.readutf.inari.core.logging.store.FlatFileLogStore;
 import com.readutf.inari.core.utils.serialize.ConfigurationSerializableAdapter;
 import com.readutf.inari.core.utils.serialize.ItemStackAdapter;
 import lombok.Getter;
@@ -59,6 +62,7 @@ public class Game {
     private final SpectatorManager spectatorManager;
     private final GameThread gameThread;
     private final Map<String, String> attributes;
+    private final GameLoggerFactory loggerFactory;
 
     private SpawnFinder playerSpawnFinder;
     private @NotNull GameState gameState;
@@ -69,6 +73,7 @@ public class Game {
 
     protected Game(JavaPlugin javaPlugin, GameEventManager gameEventManager, ActiveArena intialArena, List<Team> playerTeams, RoundCreator... stageCreators) {
         this.gameId = UUID.randomUUID();
+        this.loggerFactory = new GameLoggerFactory(this, gameId1 -> new FlatFileLogStore(gameId1, javaPlugin.getDataFolder()));
         this.javaPlugin = javaPlugin;
         this.arena = intialArena;
         this.playerTeams = playerTeams;
@@ -132,7 +137,7 @@ public class Game {
         }
 
         for (Player alivePlayers : getOnlineAndAlivePlayers()) {
-            alivePlayers.teleport(playerSpawnFinder.findSpawn(this, alivePlayers));
+            alivePlayers.teleport(playerSpawnFinder.findSpawn(alivePlayers));
         }
 
         currentRound.roundStart();
@@ -164,6 +169,7 @@ public class Game {
         gameThread.cancel();
         spectatorManager.shutdown();
         gameEventManager.unregisterGame(this);
+        loggerFactory.shutdown();
         GameManager.getInstance().removeGame(this);
     }
 

@@ -1,20 +1,21 @@
 package com.readutf.inari.core.arena.stores.gridloader;
 
-import com.google.gson.Gson;
-import com.mojang.authlib.minecraft.client.ObjectMapper;
 import com.readutf.inari.core.arena.ActiveArena;
-import com.readutf.inari.core.arena.stores.gridloader.grid.GridPositionManager;
 import com.readutf.inari.core.arena.Arena;
 import com.readutf.inari.core.arena.ArenaManager;
 import com.readutf.inari.core.arena.exceptions.ArenaLoadException;
 import com.readutf.inari.core.arena.exceptions.ArenaStoreException;
 import com.readutf.inari.core.arena.marker.MarkerScanner;
 import com.readutf.inari.core.arena.meta.ArenaMeta;
+import com.readutf.inari.core.arena.stores.gridloader.grid.GridPositionManager;
 import com.readutf.inari.core.arena.stores.gridloader.loader.ArenaBuildLoader;
 import com.readutf.inari.core.game.Game;
 import com.readutf.inari.core.logging.Logger;
-import com.readutf.inari.core.logging.LoggerManager;
-import com.readutf.inari.core.utils.*;
+import com.readutf.inari.core.logging.LoggerFactory;
+import com.readutf.inari.core.utils.Cuboid;
+import com.readutf.inari.core.utils.Position;
+import com.readutf.inari.core.utils.WorldCuboid;
+import com.readutf.inari.core.utils.WorldEditUtils;
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.MaxChangedBlocksException;
 import com.sk89q.worldedit.WorldEdit;
@@ -30,7 +31,6 @@ import org.bukkit.generator.BiomeProvider;
 import org.bukkit.generator.BlockPopulator;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.generator.WorldInfo;
-import org.bukkit.material.MaterialData;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -51,7 +51,7 @@ public class SchematicArenaManager extends ArenaManager {
 
     private @Getter static final WorldCreator worldCreator;
     private @Getter static final World world;
-    private static Logger logger = LoggerManager.getInstance().getLogger(SchematicArenaManager.class);
+    private static Logger logger = LoggerFactory.getLogger(SchematicArenaManager.class);
 
     static {
 
@@ -90,7 +90,7 @@ public class SchematicArenaManager extends ArenaManager {
     public void save(WorldCuboid worldCuboid, Arena arena) throws ArenaStoreException {
 
         File arenaFolder = new File(arenasFolder, arena.getName());
-        if (arenaFolder.mkdirs()) logger.fine("Created arena folder");
+        if (arenaFolder.mkdirs()) logger.info("Created arena folder");
 
         arena = arena.makeRelative();
 
@@ -158,7 +158,7 @@ public class SchematicArenaManager extends ArenaManager {
 
         gridPositionManager.free(new GridPositionManager.GridSpace((int) min.getX(), (int) min.getZ()));
 
-        logger.fine("Unloaded arena " + arena.getName());
+        logger.info("Unloaded arena " + arena.getName());
     }
 
     public Arena loadArena(ArenaMeta arenaMeta) throws IOException, WorldEditException {
@@ -210,7 +210,7 @@ public class SchematicArenaManager extends ArenaManager {
         final File arenasFolder;
         arenasFolder = new File(pluginFolder, "arenas");
         if (arenasFolder.mkdirs()) {
-            logger.fine("Created arenas folder");
+            logger.info("Created arenas folder");
         }
         return arenasFolder;
     }

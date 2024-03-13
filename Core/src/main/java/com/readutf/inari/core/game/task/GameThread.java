@@ -2,8 +2,9 @@ package com.readutf.inari.core.game.task;
 
 import com.readutf.inari.core.game.Game;
 import com.readutf.inari.core.game.GameState;
+import com.readutf.inari.core.logging.GameLoggerFactory;
 import com.readutf.inari.core.logging.Logger;
-import com.readutf.inari.core.logging.LoggerManager;
+import com.readutf.inari.core.logging.LoggerFactory;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.server.MinecraftServer;
@@ -12,17 +13,17 @@ import java.util.*;
 
 public class GameThread extends TimerTask {
 
-    private static final Logger logger = LoggerManager.getInstance().getLogger(GameThread.class);
 
     private final Game game;
+    private final Logger logger;
     private final int startTick;
-
     private int lastTick = 0;
 
     private final Map<GameTask, TaskInfo> gameTasks;
 
     public GameThread(Game game) {
         this.game = game;
+        this.logger = game.getLoggerFactory().getLogger(GameThread.class);
         this.gameTasks = new HashMap<>();
         this.startTick = MinecraftServer.currentTick;
     }

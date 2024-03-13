@@ -5,7 +5,7 @@ import com.readutf.inari.core.game.Game;
 import com.readutf.inari.core.game.GameManager;
 import com.readutf.inari.core.game.events.GameEvent;
 import com.readutf.inari.core.logging.Logger;
-import com.readutf.inari.core.logging.LoggerManager;
+import com.readutf.inari.core.logging.LoggerFactory;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.event.Event;
@@ -29,7 +29,7 @@ import java.util.*;
 
 public class GameEventManager implements Listener {
 
-    private static final Logger logger = LoggerManager.getInstance().getLogger(GameEventManager.class);
+    private static final Logger logger = LoggerFactory.getLogger(GameEventManager.class);
 
     private final JavaPlugin javaPlugin;
     private final Map<UUID, Map<Class<? extends Event>, List<GameEventListener>>> gameIdToEventMethod;

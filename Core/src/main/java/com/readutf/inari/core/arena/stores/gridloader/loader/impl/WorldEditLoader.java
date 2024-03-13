@@ -2,8 +2,9 @@ package com.readutf.inari.core.arena.stores.gridloader.loader.impl;
 
 import com.readutf.inari.core.arena.exceptions.ArenaStoreException;
 import com.readutf.inari.core.arena.stores.gridloader.loader.ArenaBuildLoader;
+import com.readutf.inari.core.logging.GameLoggerFactory;
 import com.readutf.inari.core.logging.Logger;
-import com.readutf.inari.core.logging.LoggerManager;
+import com.readutf.inari.core.logging.LoggerFactory;
 import com.readutf.inari.core.utils.Position;
 import com.readutf.inari.core.utils.WorldCuboid;
 import com.readutf.inari.core.utils.WorldEditUtils;
@@ -33,7 +34,7 @@ import java.util.Map;
 
 public class WorldEditLoader implements ArenaBuildLoader {
 
-    private static final Logger logger = LoggerManager.getInstance().getLogger(WorldEditLoader.class);
+    private static final Logger logger = LoggerFactory.getLogger(WorldEditLoader.class);
 
     private final Map<String, Clipboard> clipboards;
 
@@ -43,24 +44,29 @@ public class WorldEditLoader implements ArenaBuildLoader {
 
     @Override
     public void pasteSchematic(World world, File arenaFolder, Position origin) throws IOException {
-        long start = System.currentTimeMillis();
 
+
+        long schematicStart = System.currentTimeMillis();
         Clipboard clipboard = clipboards.getOrDefault(arenaFolder.getName(), null);
         if(clipboard == null) {
             ClipboardReader reader = BuiltInClipboardFormat.SPONGE_SCHEMATIC.getReader(new FileInputStream(new File(arenaFolder, "arena.schematic")));
             clipboard = reader.read();
+            clipboards.put(arenaFolder.getName(), clipboard);
         }
+
+        logger.info("Loaded schematic in " + (System.currentTimeMillis() - schematicStart) + "ms");
+        long pasteStart = System.currentTimeMillis();
 
         try (EditSession editSession = WorldEdit.getInstance().newEditSession(BukkitAdapter.adapt(world))) {
             Operation pasteOperation = new ClipboardHolder(clipboard).createPaste(editSession)
                     .to(BlockVector3.at(origin.getX(), origin.getY(), origin.getZ()))
-                    .ignoreAirBlocks(true)
+                    .ignoreAirBlocks(false)
                     .build();
 
             Operations.complete(pasteOperation);
         }
 
-        logger.fine("Pasted schematic at " + origin + " in " + (System.currentTimeMillis() - start) + "ms");
+        logger.info("Pasted schematic at " + origin + " in " + (System.currentTimeMillis() - pasteStart) + "ms");
     }
 
     @Override
@@ -87,7 +93,7 @@ public class WorldEditLoader implements ArenaBuildLoader {
             throw new ArenaStoreException(e.getMessage());
         }
 
-        logger.fine("Saved schematic in " + (System.currentTimeMillis() - start) + "ms");
+        logger.info("Saved schematic in " + (System.currentTimeMillis() - start) + "ms");
     }
 
 }

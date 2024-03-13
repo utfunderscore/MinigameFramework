@@ -2,7 +2,6 @@ package com.readutf.inari.test.games.sumo;
 
 import com.readutf.inari.core.arena.ActiveArena;
 import com.readutf.inari.core.arena.ArenaManager;
-import com.readutf.inari.core.arena.exceptions.ArenaLoadException;
 import com.readutf.inari.core.arena.meta.ArenaMeta;
 import com.readutf.inari.core.event.GameEventManager;
 import com.readutf.inari.core.game.Game;
@@ -13,6 +12,7 @@ import com.readutf.inari.core.game.team.Team;
 import com.readutf.inari.test.InariDemo;
 import com.readutf.inari.test.games.GameStarter;
 import com.readutf.inari.test.games.shared.AwaitingPlayersStage;
+import com.readutf.inari.test.utils.ThreadUtils;
 import lombok.AllArgsConstructor;
 
 import java.util.List;
@@ -44,11 +44,17 @@ public class SumoGameStarter implements GameStarter {
                         (game, previousRound) -> new SumoRound(game, (SumoRound) previousRound),
                         (game, previousRound) -> new SumoRound(game, (SumoRound) previousRound),
                         (game, previousRound) -> new SumoRound(game, (SumoRound) previousRound))
-                .setPlayerSpawnHandler(new TeamBasedSpawning("spawn"))
-                .setSpectatorSpawnHandler(new SumoSpectatorSpawnFinder())
+                .setPlayerSpawnHandler(game -> new TeamBasedSpawning(game, "spawn"))
+                .setSpectatorSpawnHandler(SumoSpectatorSpawnFinder::new)
                 .build();
 
-        gameManager.startGame(createdMatch);
+        ThreadUtils.ensureSync(() -> {
+            try {
+                gameManager.startGame(createdMatch);
+            } catch (GameException e) {
+                e.printStackTrace();
+            }
+        });
         return createdMatch;
     }
 }

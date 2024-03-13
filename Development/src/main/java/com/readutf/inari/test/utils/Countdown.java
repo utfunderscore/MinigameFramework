@@ -2,22 +2,19 @@ package com.readutf.inari.test.utils;
 
 import com.readutf.inari.core.game.Game;
 import com.readutf.inari.core.game.GameState;
-import com.readutf.inari.core.game.stage.Round;
 import com.readutf.inari.core.game.task.GameTask;
+import com.readutf.inari.core.logging.GameLoggerFactory;
+import com.readutf.inari.core.logging.Logger;
 import net.minecraft.server.MinecraftServer;
-import org.bukkit.event.Cancellable;
-import org.jetbrains.annotations.NotNull;
-
-import java.util.function.Consumer;
 
 public class Countdown extends GameTask {
 
     private final Game game;
     private final int duration;
     private final CancellableTask<Integer> timeConsumer;
+    private final Logger logger;
 
     private int startTime = MinecraftServer.currentTick;
-    private Round round;
 
 
     /**
@@ -28,7 +25,7 @@ public class Countdown extends GameTask {
      */
     public Countdown(Game game, int duration, CancellableTask<Integer> timeConsumer) {
         this.game = game;
-        this.round = null;
+        this.logger = game.getLoggerFactory().getLogger(Countdown.class);
         this.duration = duration + 1;
         this.timeConsumer = timeConsumer;
         timeConsumer.setCancelTaskRunnable(this::cancel);
@@ -38,17 +35,10 @@ public class Countdown extends GameTask {
     @Override
     public void run() {
         if (game.getGameState() == GameState.ENDED) {
-
-            System.out.println("Game ended");
+            logger.debug("Game ended, cancelling countdown");
             cancel();
             return;
 
-        } else if (round != null && game.getCurrentRound() != round) {
-            System.out.println("Round ended");
-            System.out.println(game.getCurrentRound());
-            System.out.println(round);
-            cancel();
-            return;
         }
 
         int sinceStart = MinecraftServer.currentTick - startTime;
