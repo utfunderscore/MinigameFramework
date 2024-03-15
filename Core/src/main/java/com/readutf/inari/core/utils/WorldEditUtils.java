@@ -1,6 +1,5 @@
 package com.readutf.inari.core.utils;
 
-import com.readutf.inari.core.InariCore;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.CuboidRegion;

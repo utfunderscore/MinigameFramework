@@ -1,10 +1,11 @@
 package com.readutf.inari.core.game;
 
+import com.destroystokyo.paper.util.maplist.ChunkList;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
-import com.readutf.inari.core.InariCore;
 import com.readutf.inari.core.arena.ActiveArena;
+import com.readutf.inari.core.arena.chunk.ChunkListeners;
 import com.readutf.inari.core.event.GameEventManager;
 import com.readutf.inari.core.event.testlistener.TestListener;
 import com.readutf.inari.core.game.death.DeathListeners;
@@ -87,6 +88,8 @@ public class Game {
         this.gameState = GameState.WAITING;
 
         timer.schedule(gameThread, 0, 1);
+
+        ChunkListeners.register(javaPlugin);
 
         Arrays.asList(
                 new TestListener(),
@@ -171,6 +174,7 @@ public class Game {
         gameEventManager.unregisterGame(this);
         loggerFactory.shutdown();
         GameManager.getInstance().removeGame(this);
+
     }
 
     public void messageAlive(Component component) {

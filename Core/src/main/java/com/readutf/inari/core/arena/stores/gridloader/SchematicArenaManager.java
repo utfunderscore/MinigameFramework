@@ -12,10 +12,7 @@ import com.readutf.inari.core.arena.stores.gridloader.loader.ArenaBuildLoader;
 import com.readutf.inari.core.game.Game;
 import com.readutf.inari.core.logging.Logger;
 import com.readutf.inari.core.logging.LoggerFactory;
-import com.readutf.inari.core.utils.Cuboid;
-import com.readutf.inari.core.utils.Position;
-import com.readutf.inari.core.utils.WorldCuboid;
-import com.readutf.inari.core.utils.WorldEditUtils;
+import com.readutf.inari.core.utils.*;
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.MaxChangedBlocksException;
 import com.sk89q.worldedit.WorldEdit;
@@ -39,43 +36,26 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
-import java.util.concurrent.ExecutionException;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 public class SchematicArenaManager extends ArenaManager {
 
-    private @Getter static final WorldCreator worldCreator;
-    private @Getter static final World world;
+    private @Getter final WorldCreator worldCreator;
+    private @Getter final World world;
     private static Logger logger = LoggerFactory.getLogger(SchematicArenaManager.class);
-
-    static {
-
-//        try {
-////            FileUtils.deleteDirectory(new File(Bukkit.getServer().getWorldContainer().getParent(), "active_arenas"));
-//            logger.fine("Deleted old active_arenas folder");
-//        } catch (IOException e) {
-//            logger.fine("Failed to delete old active_arenas folder");
-//        }
-
-        worldCreator = new WorldCreator("active_arenas");
-        worldCreator.type(WorldType.FLAT);
-        worldCreator.generator(new VoidChunkGenerator());
-        world = worldCreator.createWorld();
-        world.setAutoSave(false);
-    }
-
+    private static final ExecutorService executorService = Executors.newCachedThreadPool();
 
     private final JavaPlugin javaPlugin;
     private final File arenasFolder;
     private final List<ArenaMeta> availableArenas;
-    private final AtomicInteger currentOffset = new AtomicInteger(0);
     private final GridPositionManager gridPositionManager;
     private final ArenaBuildLoader buildLoader;
+
+    private final Map<ArenaMeta, ArrayDeque<Arena>> cachedArenas = new HashMap<>();
 
     public SchematicArenaManager(JavaPlugin javaPlugin, MarkerScanner markerScanner, ArenaBuildLoader buildLoader, File pluginFolder) {
         super(markerScanner);
@@ -84,6 +64,32 @@ public class SchematicArenaManager extends ArenaManager {
         this.availableArenas = loadAvailableArenas();
         this.buildLoader = buildLoader;
         this.gridPositionManager = new GridPositionManager(500);
+
+        this.worldCreator = new WorldCreator("active_arenas");
+        this.worldCreator.type(WorldType.FLAT);
+        this.worldCreator.generator(new VoidChunkGenerator());
+        this.world = worldCreator.createWorld();
+        this.world.setAutoSave(false);
+
+        for (ArenaMeta availableArena : availableArenas) {
+            ArrayDeque<Arena> arenas = new ArrayDeque<>();
+            for (int i = 0; i < 10; i++) {
+                Arena load;
+                try {
+                    load = loadArena(availableArena);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                if (load != null) {
+                    System.out.println("123 Loaded arena " + availableArena.getName());
+                    arenas.add(load);
+                }
+            }
+            cachedArenas.put(availableArena, arenas);
+        }
+
+
+
     }
 
     @Override
@@ -104,7 +110,6 @@ public class SchematicArenaManager extends ArenaManager {
             throw new ArenaStoreException("Failed to save schematic.");
         }
 
-
         try {
 
             FileWriter writer = new FileWriter(new File(arenaFolder, "arena.json"));
@@ -119,6 +124,27 @@ public class SchematicArenaManager extends ArenaManager {
 
     @Override
     public ActiveArena load(ArenaMeta arenaMeta) throws ArenaLoadException {
+
+        ArrayDeque<Arena> cachedArenas = this.cachedArenas.get(arenaMeta);
+        if (!cachedArenas.isEmpty()) {
+
+            executorService.submit(() -> {
+                Arena arena;
+
+                try {
+                    arena = loadArena(arenaMeta);
+                } catch (IOException e) {
+                    logger.error("Failed to parse json.", e);
+                    return;
+                } catch (WorldEditException e) {
+                    logger.error("Failed to load schematic.", e);
+                    return;
+                }
+                if (arena == null) logger.error("Arena not found");
+            });
+
+            return new ActiveArena(world, cachedArenas.poll(), this::unload);
+        }
 
         Arena arena;
 
@@ -161,7 +187,7 @@ public class SchematicArenaManager extends ArenaManager {
         logger.info("Unloaded arena " + arena.getName());
     }
 
-    public Arena loadArena(ArenaMeta arenaMeta) throws IOException, WorldEditException {
+    private Arena loadArena(ArenaMeta arenaMeta) throws IOException, WorldEditException {
         File arenaFolder = new File(arenasFolder, arenaMeta.getName());
         if (!arenaFolder.exists()) return null;
 
@@ -181,7 +207,17 @@ public class SchematicArenaManager extends ArenaManager {
 
     @Override
     public @Nullable List<ArenaMeta> findAvailableArenas(Predicate<ArenaMeta> predicate) {
-        return availableArenas.stream().filter(predicate).toList();
+        List<ArenaMeta> list = new ArrayList<>();
+        for (ArenaMeta arenaMeta : availableArenas) {
+            if (predicate.test(arenaMeta)) {
+                if (cachedArenas.getOrDefault(arenaMeta, new ArrayDeque<>()).isEmpty()) {
+                    logger.info("Failed to find available arena for " + arenaMeta.getName() + ", low cache level");
+                    continue;
+                }
+                list.add(arenaMeta);
+            }
+        }
+        return list;
     }
 
     public List<ArenaMeta> loadAvailableArenas() {
@@ -223,42 +259,58 @@ public class SchematicArenaManager extends ArenaManager {
     public static class VoidChunkGenerator extends ChunkGenerator {
 
         @Override
-        public List<BlockPopulator> getDefaultPopulators(World world) {return List.of();}
+        public List<BlockPopulator> getDefaultPopulators(World world) {
+            return List.of();
+        }
 
         @Override
         public void generateNoise(@NotNull WorldInfo worldInfo, @NotNull Random random, int chunkX, int chunkZ,
-                                  @NotNull ChunkData chunkData) {}
+                                  @NotNull ChunkData chunkData) {
+        }
 
         @Override
         public void generateSurface(@NotNull WorldInfo worldInfo, @NotNull Random random, int chunkX, int chunkZ,
-                                    @NotNull ChunkData chunkData) {}
+                                    @NotNull ChunkData chunkData) {
+        }
 
         @Override
         public void generateBedrock(@NotNull WorldInfo worldInfo, @NotNull Random random, int chunkX, int chunkZ,
-                                    @NotNull ChunkData chunkData) {}
+                                    @NotNull ChunkData chunkData) {
+        }
 
         @Override
         public void generateCaves(@NotNull WorldInfo worldInfo, @NotNull Random random, int chunkX, int chunkZ,
-                                  @NotNull ChunkData chunkData) {}
+                                  @NotNull ChunkData chunkData) {
+        }
 
         @Override
         @Nullable
-        public BiomeProvider getDefaultBiomeProvider(@NotNull WorldInfo worldInfo) {return new VoidBiomeProvider();}
+        public BiomeProvider getDefaultBiomeProvider(@NotNull WorldInfo worldInfo) {
+            return new VoidBiomeProvider();
+        }
 
         @Override
-        public boolean canSpawn(World world, int x, int z) {return true;}
+        public boolean canSpawn(World world, int x, int z) {
+            return true;
+        }
 
         @Override
-        public Location getFixedSpawnLocation(World world, Random random) {return new Location(world, 0, 100, 0);}
+        public Location getFixedSpawnLocation(World world, Random random) {
+            return new Location(world, 0, 100, 0);
+        }
     }
 
     private static class VoidBiomeProvider extends BiomeProvider {
 
         @Override
-        public @NotNull Biome getBiome(@NotNull WorldInfo worldInfo, int x, int y, int z) {return Biome.THE_VOID;}
+        public @NotNull Biome getBiome(@NotNull WorldInfo worldInfo, int x, int y, int z) {
+            return Biome.THE_VOID;
+        }
 
         @Override
-        public @NotNull List<Biome> getBiomes(@NotNull WorldInfo worldInfo) {return List.of(Biome.THE_VOID);}
+        public @NotNull List<Biome> getBiomes(@NotNull WorldInfo worldInfo) {
+            return List.of(Biome.THE_VOID);
+        }
 
     }
 

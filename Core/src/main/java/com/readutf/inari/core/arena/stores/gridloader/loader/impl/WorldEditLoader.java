@@ -23,7 +23,9 @@ import com.sk89q.worldedit.function.operation.Operations;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.session.ClipboardHolder;
+import org.bukkit.Chunk;
 import org.bukkit.World;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -37,9 +39,11 @@ public class WorldEditLoader implements ArenaBuildLoader {
     private static final Logger logger = LoggerFactory.getLogger(WorldEditLoader.class);
 
     private final Map<String, Clipboard> clipboards;
+    private final JavaPlugin plugin;
 
-    public WorldEditLoader() {
+    public WorldEditLoader(JavaPlugin plugin) {
         this.clipboards = new HashMap<>();
+        this.plugin = plugin;
     }
 
     @Override
@@ -64,6 +68,21 @@ public class WorldEditLoader implements ArenaBuildLoader {
                     .build();
 
             Operations.complete(pasteOperation);
+        }
+
+        int chunkXStart = origin.getBlockX() >> 4;
+        int chunkXEnd = (origin.getBlockX() + clipboard.getDimensions().getBlockX()) >> 4;
+        int chunkZStart = origin.getBlockZ() >> 4;
+        int chunkZEnd = (origin.getBlockZ() + clipboard.getDimensions().getBlockZ()) >> 4;
+
+        for (int x = chunkXStart; x <= chunkXEnd; x++) {
+            for (int z = chunkZStart; z <= chunkZEnd; z++) {
+                Chunk chunkAt = world.getChunkAt(x, z);
+                chunkAt.load();
+                chunkAt.setForceLoaded(true);
+                chunkAt.addPluginChunkTicket(plugin);
+                System.out.println("Loaded chunk at (" + x + " " + z + ")");
+            }
         }
 
         logger.info("Pasted schematic at " + origin + " in " + (System.currentTimeMillis() - pasteStart) + "ms");
