@@ -35,7 +35,7 @@ public class InariDemo extends JavaPlugin {
     public void onEnable() {
 
         WorldEditSelectionManager worldEditSelectionManager = new WorldEditSelectionManager();
-        this.arenaManager = new SchematicArenaManager(this, new TileEntityScanner(), new WorldEditLoader(), getDataFolder());
+        this.arenaManager = new SchematicArenaManager(this, new TileEntityScanner(), new WorldEditLoader(this), getDataFolder());
         this.gameManager = new GameManager();
         GameEventManager gameEventManager = new GameEventManager(this, gameManager);
 

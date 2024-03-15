@@ -16,7 +16,8 @@ import com.readutf.inari.test.utils.ThreadUtils;
 import lombok.AllArgsConstructor;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ThreadLocalRandom;
 
 @AllArgsConstructor
 public class SumoGameStarter implements GameStarter {
@@ -26,16 +27,15 @@ public class SumoGameStarter implements GameStarter {
     private final GameEventManager eventManager;
 
     @Override
-    public Game startGame(List<Team> teams) throws Exception {
+    public CompletableFuture<Game> startGame(List<Team> teams) throws Exception {
 
 
-        Optional<ArenaMeta> first = arenaManager.findAvailableArenas(arenaMeta -> arenaMeta.getName().startsWith("sumo")).stream().findFirst();
-        if (first.isEmpty()) {
-            throw new Exception("Could not find arena");
-        }
+        List<ArenaMeta> availableArenas = arenaManager.findAvailableArenas(arenaMeta -> arenaMeta.getName().startsWith("sumo"));
+        if(availableArenas.isEmpty()) throw new Exception("No available arenas");
 
+        ActiveArena load = arenaManager.load(availableArenas.get(ThreadLocalRandom.current().nextInt(availableArenas.size())));
 
-        ActiveArena load = arenaManager.load(first.get());
+        CompletableFuture<Game> future = new CompletableFuture<>();
 
         Game createdMatch = Game.builder(InariDemo.getInstance(), load, eventManager, teams,
                         (game, previousRound) -> new AwaitingPlayersStage(game, 2, 60),
@@ -51,10 +51,11 @@ public class SumoGameStarter implements GameStarter {
         ThreadUtils.ensureSync(() -> {
             try {
                 gameManager.startGame(createdMatch);
+                future.complete(createdMatch);
             } catch (GameException e) {
-                e.printStackTrace();
+                future.completeExceptionally(e);
             }
         });
-        return createdMatch;
+        return future;
     }
 }
