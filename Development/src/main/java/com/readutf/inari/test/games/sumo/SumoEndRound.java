@@ -7,7 +7,7 @@ import com.readutf.inari.core.game.team.Team;
 import com.readutf.inari.core.utils.ColorUtils;
 import com.readutf.inari.test.utils.CancellableTask;
 import com.readutf.inari.test.utils.Countdown;
-import com.readutf.inari.test.utils.ThreadUtils;
+import com.readutf.inari.core.utils.ThreadUtils;
 import net.kyori.adventure.title.Title;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
@@ -29,8 +29,8 @@ public class SumoEndRound implements Round {
     @Override
     public void roundStart() {
 
-        Team team1 = game.getPlayerTeams().get(0);
-        Team team2 = game.getPlayerTeams().get(1);
+        Team team1 = game.getTeams().get(0);
+        Team team2 = game.getTeams().get(1);
 
         Team winner = winningTeam;
         Team losers = team1 == winner ? team2 : team1;
@@ -57,7 +57,7 @@ public class SumoEndRound implements Round {
             @Override
             public void run(Integer integer) {
                 if (integer == 0)
-                    ThreadUtils.ensureSync(() -> game.endGame(winningTeam, GameEndReason.ENEMIES_ELIMINATED));
+                    ThreadUtils.ensureSync(game.getJavaPlugin(), () -> game.endGame(winningTeam, GameEndReason.ENEMIES_ELIMINATED));
             }
         });
 

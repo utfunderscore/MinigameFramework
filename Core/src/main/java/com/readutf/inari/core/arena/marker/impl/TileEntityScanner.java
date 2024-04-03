@@ -44,6 +44,8 @@ public class TileEntityScanner implements MarkerScanner {
             }
         }
 
+        System.out.println("Scanning " + chunks.size() + " chunks");
+
         for (Chunk chunk : chunks.values()) {
 
             if(!chunk.isLoaded()) chunk.load();
@@ -62,6 +64,9 @@ public class TileEntityScanner implements MarkerScanner {
         }
 
         logger.debug("Scanned " + signs.size() + " signs in " + (System.currentTimeMillis() - start) + "ms");
+        for (Marker sign : signs) {
+            logger.debug(" - " + sign.toString());
+        }
 
         return signs;
     }

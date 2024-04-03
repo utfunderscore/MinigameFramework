@@ -11,7 +11,7 @@ import com.readutf.inari.core.logging.Logger;
 import com.readutf.inari.core.utils.ColorUtils;
 import com.readutf.inari.test.utils.CancellableTask;
 import com.readutf.inari.test.utils.Countdown;
-import com.readutf.inari.test.utils.ThreadUtils;
+import com.readutf.inari.core.utils.ThreadUtils;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.jetbrains.annotations.Nullable;
@@ -53,7 +53,7 @@ public class AwaitingPlayersStage implements Round {
 
                 if (integer == 0) {
                     cancel();
-                    ThreadUtils.ensureSync(() -> game.endGame(null, GameEndReason.CANCELLED));
+                    ThreadUtils.ensureSync(game.getJavaPlugin(), () -> game.endGame(null, GameEndReason.CANCELLED));
                 }
 
             }
@@ -79,7 +79,7 @@ public class AwaitingPlayersStage implements Round {
 
     private boolean checkForValidPlayers(int online) {
         if (online >= targetPlayers) {
-            ThreadUtils.ensureSync(() -> game.endRound(null));
+            ThreadUtils.ensureSync(game.getJavaPlugin(), () -> game.endRound(null));
             return true;
         }
         return false;

@@ -7,9 +7,11 @@ import com.readutf.inari.core.game.spawning.SpawnFinder;
 import com.readutf.inari.core.game.spawning.SpawnFinderFactory;
 import com.readutf.inari.core.game.stage.RoundCreator;
 import com.readutf.inari.core.game.team.Team;
+import com.readutf.inari.core.scoreboard.ScoreboardManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
+import java.util.UUID;
 
 public class GameBuilder {
 
@@ -18,9 +20,10 @@ public class GameBuilder {
     public GameBuilder(JavaPlugin javaPlugin,
                        ActiveArena intialArena,
                        GameEventManager gameEventManager,
+                       ScoreboardManager scoreboardManager,
                        List<Team> playerTeams,
                        RoundCreator... stageCreators) {
-        this.game = new Game(javaPlugin, gameEventManager, intialArena, playerTeams, stageCreators);
+        this.game = new Game(javaPlugin, gameEventManager, scoreboardManager, intialArena, playerTeams, stageCreators);
     }
 
     public GameBuilder(GameCreator gameCreator) {

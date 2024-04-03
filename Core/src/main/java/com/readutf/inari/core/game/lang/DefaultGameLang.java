@@ -14,7 +14,6 @@ public class DefaultGameLang implements GameLang {
 
     private final LegacyComponentSerializer serializer = LegacyComponentSerializer.legacy('&');
 
-
     @Override
     public Collection<Component> getGameSummaryMessage(Player player) {
         return List.of(serializer.deserialize("&aMatch Complete"));

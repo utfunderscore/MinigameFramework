@@ -40,6 +40,7 @@ dependencies {
 
     implementation 'co.aikar:acf-paper:0.5.1-SNAPSHOT'
 
+    compileOnly 'me.lucko:spark-api:0.1-SNAPSHOT'
 
     //lombok
     compileOnly 'org.projectlombok:lombok:1.18.30'

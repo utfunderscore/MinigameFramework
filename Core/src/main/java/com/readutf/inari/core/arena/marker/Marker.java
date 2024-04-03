@@ -65,8 +65,9 @@ public class Marker {
 
         float yaw = 0;
 
-        if (sign instanceof Rotatable) {
-            yaw = AngleUtils.faceToYaw(((Rotatable) sign).getRotation());
+
+        if (sign.getBlockData() instanceof Rotatable rotatable) {
+            yaw = AngleUtils.faceToYaw(rotatable.getRotation());
         }
 
         Position offset = new Position(0, 0, 0);

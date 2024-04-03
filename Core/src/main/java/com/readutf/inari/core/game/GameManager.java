@@ -4,6 +4,7 @@ import com.readutf.inari.core.game.exception.GameException;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -51,16 +52,20 @@ public class GameManager {
         }
     }
 
-    public Game getGameById(UUID uuid) {
+    public @Nullable Game getGameById(UUID uuid) {
         return idToGame.get(uuid);
     }
 
-    public Game getGameByPlayer(UUID uuid) {
+    public @Nullable Game getGameByPlayer(UUID uuid) {
         return playerToGame.get(uuid);
     }
 
-    public Game getGameByPlayer(Player player) {
+    public @Nullable Game getGameByPlayer(Player player) {
         return playerToGame.get(player.getUniqueId());
+    }
+
+    public @Nullable Game getGameById(String gameId) {
+        return getGames().stream().filter(game -> game.getGameId().toString().startsWith(gameId)).findFirst().orElse(null);
     }
 
     public Collection<Game> getGames() {

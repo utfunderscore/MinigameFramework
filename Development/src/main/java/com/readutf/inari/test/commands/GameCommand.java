@@ -45,8 +45,8 @@ public class GameCommand extends BaseCommand {
         }
 
         gameStarter.startGame(List.of(
-                new Team("Red", ChatColor.RED, Collections.singletonList(player1.getUniqueId())),
-                new Team("Blue", ChatColor.BLUE, Collections.singletonList(player2.getUniqueId()))
+                Collections.singletonList(player1.getUniqueId()),
+                Collections.singletonList(player2.getUniqueId())
         ));
 
     }

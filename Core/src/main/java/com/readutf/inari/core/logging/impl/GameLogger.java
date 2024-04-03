@@ -3,9 +3,11 @@ package com.readutf.inari.core.logging.impl;
 import com.readutf.inari.core.game.Game;
 import com.readutf.inari.core.logging.Logger;
 import com.readutf.inari.core.logging.store.LogStore;
+import lombok.Getter;
 import org.apache.logging.log4j.Level;
 import org.slf4j.LoggerFactory;
 
+@Getter
 public class GameLogger implements Logger {
 
     private final org.slf4j.Logger logger;

@@ -1,5 +1,8 @@
 package com.readutf.inari.core.logging;
 
+import com.readutf.inari.core.logging.impl.GameLogger;
+import org.apache.logging.log4j.Level;
+
 public class GenericLogger implements Logger {
 
     private final org.slf4j.Logger logger;
@@ -12,7 +15,7 @@ public class GenericLogger implements Logger {
     public void info(String message) {
         logger.info(message);
         for (GameLoggerFactory factory : GameLoggerFactory.getFactories()) {
-            factory.getLogger("Global").info(message);
+            ((GameLogger) factory.getLogger("Global")).getLogStore().saveLog(Level.INFO, System.currentTimeMillis(), message, null);
         }
     }
 
@@ -20,7 +23,7 @@ public class GenericLogger implements Logger {
     public void warn(String message) {
         logger.warn(message);
         for (GameLoggerFactory factory : GameLoggerFactory.getFactories()) {
-            factory.getLogger("Global").warn(message);
+            ((GameLogger) factory.getLogger("Global")).getLogStore().saveLog(Level.WARN, System.currentTimeMillis(), message, null);
         }
     }
 
@@ -28,7 +31,7 @@ public class GenericLogger implements Logger {
     public void error(String message) {
         logger.error(message);
         for (GameLoggerFactory factory : GameLoggerFactory.getFactories()) {
-            factory.getLogger("Global").error(message);
+            ((GameLogger) factory.getLogger("Global")).getLogStore().saveLog(Level.ERROR, System.currentTimeMillis(), message, null);
         }
     }
 
@@ -36,7 +39,7 @@ public class GenericLogger implements Logger {
     public void error(String message, Throwable throwable) {
         logger.error(message, throwable);
         for (GameLoggerFactory factory : GameLoggerFactory.getFactories()) {
-            factory.getLogger("Global").error(message, throwable);
+            ((GameLogger) factory.getLogger("Global")).getLogStore().saveLog(Level.ERROR, System.currentTimeMillis(), message, throwable);
         }
     }
 
@@ -44,7 +47,7 @@ public class GenericLogger implements Logger {
     public void debug(String message) {
         logger.debug(message);
         for (GameLoggerFactory factory : GameLoggerFactory.getFactories()) {
-            factory.getLogger("Global").debug(message);
+            ((GameLogger) factory.getLogger("Global")).getLogStore().saveLog(Level.DEBUG, System.currentTimeMillis(), message, null);
         }
     }
 }

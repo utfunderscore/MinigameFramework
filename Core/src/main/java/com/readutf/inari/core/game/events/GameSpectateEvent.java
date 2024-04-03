@@ -19,6 +19,7 @@ public class GameSpectateEvent extends PlayerGameEvent implements Cancellable {
     public GameSpectateEvent(Player player, Game game, SpectatorData spectatorData) {
         super(player, game);
         this.spectatorData = spectatorData;
+        this.cancelled = false;
     }
 
     @Override

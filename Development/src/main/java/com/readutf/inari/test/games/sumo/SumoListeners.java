@@ -10,14 +10,13 @@ import com.readutf.inari.core.game.exception.GameException;
 import com.readutf.inari.core.game.spawning.SpawnFinder;
 import com.readutf.inari.core.game.spectator.SpectatorData;
 import com.readutf.inari.core.game.team.Team;
-import com.readutf.inari.core.logging.GameLoggerFactory;
 import com.readutf.inari.core.logging.Logger;
 import com.readutf.inari.core.utils.ColorUtils;
 import com.readutf.inari.core.utils.Position;
 import com.readutf.inari.test.InariDemo;
 import com.readutf.inari.test.utils.CancellableTask;
 import com.readutf.inari.test.utils.Countdown;
-import com.readutf.inari.test.utils.ThreadUtils;
+import com.readutf.inari.core.utils.ThreadUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Location;
@@ -128,7 +127,7 @@ public class SumoListeners {
                         game.setNextRound(new SumoEndRound(game, currentRound, winnerTeam));
                     }
 
-                    ThreadUtils.ensureSync(() -> game.endRound(winnerTeam));
+                    ThreadUtils.ensureSync(game.getJavaPlugin(), () -> game.endRound(winnerTeam));
                 }
             }
         });

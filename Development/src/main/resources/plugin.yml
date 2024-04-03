@@ -4,3 +4,5 @@ main: com.readutf.inari.test.InariDemo
 api-version: 1.19
 depend:
   - WorldEdit
+softdepend:
+  - spark

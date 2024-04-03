@@ -3,6 +3,7 @@ package com.readutf.inari.core.game.team;
 import com.readutf.inari.core.utils.JsonIgnore;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
@@ -13,21 +14,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-@RequiredArgsConstructor @Getter
+@RequiredArgsConstructor @Getter @ToString
 public class Team {
 
     private final String teamName;
-    private final ChatColor color;
+    private final TeamColor color;
     private final List<UUID> players;
-
-    @Override
-    public String toString() {
-        return "Team{" +
-                "teamName='" + teamName + '\'' +
-                ", color=" + color +
-                ", players=" + players +
-                '}';
-    }
 
     @JsonIgnore
     public List<Player> getOnlinePlayers() {

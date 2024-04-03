@@ -2,10 +2,10 @@ package com.readutf.inari.core.arena.stores.gridloader.loader.impl;
 
 import com.readutf.inari.core.arena.exceptions.ArenaStoreException;
 import com.readutf.inari.core.arena.stores.gridloader.loader.ArenaBuildLoader;
-import com.readutf.inari.core.logging.GameLoggerFactory;
 import com.readutf.inari.core.logging.Logger;
 import com.readutf.inari.core.logging.LoggerFactory;
 import com.readutf.inari.core.utils.Position;
+import com.readutf.inari.core.utils.ThreadUtils;
 import com.readutf.inari.core.utils.WorldCuboid;
 import com.readutf.inari.core.utils.WorldEditUtils;
 import com.sk89q.worldedit.EditSession;
@@ -33,6 +33,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class WorldEditLoader implements ArenaBuildLoader {
 
@@ -64,7 +65,7 @@ public class WorldEditLoader implements ArenaBuildLoader {
         try (EditSession editSession = WorldEdit.getInstance().newEditSession(BukkitAdapter.adapt(world))) {
             Operation pasteOperation = new ClipboardHolder(clipboard).createPaste(editSession)
                     .to(BlockVector3.at(origin.getX(), origin.getY(), origin.getZ()))
-                    .ignoreAirBlocks(false)
+                    .ignoreAirBlocks(true)
                     .build();
 
             Operations.complete(pasteOperation);
@@ -75,15 +76,20 @@ public class WorldEditLoader implements ArenaBuildLoader {
         int chunkZStart = origin.getBlockZ() >> 4;
         int chunkZEnd = (origin.getBlockZ() + clipboard.getDimensions().getBlockZ()) >> 4;
 
-        for (int x = chunkXStart; x <= chunkXEnd; x++) {
-            for (int z = chunkZStart; z <= chunkZEnd; z++) {
-                Chunk chunkAt = world.getChunkAt(x, z);
-                chunkAt.load();
-                chunkAt.setForceLoaded(true);
-                chunkAt.addPluginChunkTicket(plugin);
-                System.out.println("Loaded chunk at (" + x + " " + z + ")");
+        AtomicInteger test = new AtomicInteger();
+
+        ThreadUtils.ensureSync(plugin, () -> {
+            for (int x = chunkXStart; x <= chunkXEnd; x++) {
+                for (int z = chunkZStart; z <= chunkZEnd; z++) {
+                    Chunk chunkAt = world.getChunkAt(x, z);
+                    chunkAt.load();
+                    chunkAt.setForceLoaded(true);
+                    chunkAt.addPluginChunkTicket(plugin);
+                    test.getAndIncrement();
+                }
             }
-        }
+        });
+        System.out.println("Loaded " + test.get() + " chunks");
 
         logger.info("Pasted schematic at " + origin + " in " + (System.currentTimeMillis() - pasteStart) + "ms");
     }

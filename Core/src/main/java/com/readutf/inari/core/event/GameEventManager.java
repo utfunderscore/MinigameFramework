@@ -15,6 +15,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -58,6 +59,7 @@ public class GameEventManager implements Listener {
         registerEventAdapter(PlayerMoveEvent.class, new PlayerMoveAdapter(gameManager));
         registerEventAdapter(BlockPlaceEvent.class, new BlockPlaceAdapter(gameManager));
         registerEventAdapter(BlockBreakEvent.class, new BlockBreakAdapter(gameManager));
+        registerEventAdapter(EntityPickupItemEvent.class, new EntityPickupItemAdapter(gameManager));
 
         for (Class<? extends PlayerEvent> aClass : new Reflections("org.bukkit.event").getSubTypesOf(PlayerEvent.class)) {
             //check that class is not interface or abstract

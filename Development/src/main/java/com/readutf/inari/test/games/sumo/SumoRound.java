@@ -5,10 +5,10 @@ import com.readutf.inari.core.game.stage.Round;
 import com.readutf.inari.core.game.team.Team;
 import com.readutf.inari.core.utils.ColorUtils;
 import com.readutf.inari.core.utils.Cuboid;
+import com.readutf.inari.core.utils.ThreadUtils;
 import com.readutf.inari.test.games.shared.BuildPreventionListeners;
 import com.readutf.inari.test.utils.CancellableTask;
 import com.readutf.inari.test.utils.Countdown;
-import com.readutf.inari.test.utils.ThreadUtils;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
@@ -108,7 +108,7 @@ public class SumoRound implements Round {
 
     public void countdownEnd() {
 
-        ThreadUtils.ensureSync(() -> {
+        ThreadUtils.ensureSync(game.getJavaPlugin(), () -> {
             for (Player onlineAndAlivePlayer : game.getOnlineAndAlivePlayers()) {
                 onlineAndAlivePlayer.removePotionEffect(PotionEffectType.JUMP);
                 onlineAndAlivePlayer.removePotionEffect(PotionEffectType.SLOW);

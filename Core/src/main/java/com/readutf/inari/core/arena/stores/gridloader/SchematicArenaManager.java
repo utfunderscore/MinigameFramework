@@ -73,7 +73,7 @@ public class SchematicArenaManager extends ArenaManager {
 
         for (ArenaMeta availableArena : availableArenas) {
             ArrayDeque<Arena> arenas = new ArrayDeque<>();
-            for (int i = 0; i < 10; i++) {
+            for (int i = 0; i < 1; i++) {
                 Arena load;
                 try {
                     load = loadArena(availableArena);
@@ -81,14 +81,11 @@ public class SchematicArenaManager extends ArenaManager {
                     throw new RuntimeException(e);
                 }
                 if (load != null) {
-                    System.out.println("123 Loaded arena " + availableArena.getName());
                     arenas.add(load);
                 }
             }
             cachedArenas.put(availableArena, arenas);
         }
-
-
 
     }
 

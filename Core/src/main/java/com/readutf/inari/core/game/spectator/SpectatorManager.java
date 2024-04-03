@@ -45,7 +45,10 @@ public class SpectatorManager {
             GameSpectateEvent event = new GameSpectateEvent(player, game, data);
             Bukkit.getPluginManager().callEvent(event);
             if (event.isCancelled()) return false;
+            data = event.getSpectatorData();
         }
+
+        System.out.println();
 
         spectatorData.put(playerId, data);
 

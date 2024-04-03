@@ -1,11 +1,9 @@
 package com.readutf.inari.core.game;
 
-import com.destroystokyo.paper.util.maplist.ChunkList;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
 import com.readutf.inari.core.arena.ActiveArena;
-import com.readutf.inari.core.arena.chunk.ChunkListeners;
 import com.readutf.inari.core.event.GameEventManager;
 import com.readutf.inari.core.event.testlistener.TestListener;
 import com.readutf.inari.core.game.death.DeathListeners;
@@ -16,6 +14,7 @@ import com.readutf.inari.core.game.events.GameStartEvent;
 import com.readutf.inari.core.game.exception.GameException;
 import com.readutf.inari.core.game.lang.DefaultGameLang;
 import com.readutf.inari.core.game.rejoin.RejoinListeners;
+import com.readutf.inari.core.game.scoreboard.ScoreboardListeners;
 import com.readutf.inari.core.game.spawning.SpawnFinder;
 import com.readutf.inari.core.game.spectator.SpectatorData;
 import com.readutf.inari.core.game.spectator.SpectatorListeners;
@@ -26,6 +25,8 @@ import com.readutf.inari.core.game.task.GameThread;
 import com.readutf.inari.core.game.team.Team;
 import com.readutf.inari.core.logging.GameLoggerFactory;
 import com.readutf.inari.core.logging.store.FlatFileLogStore;
+import com.readutf.inari.core.scoreboard.ScoreboardManager;
+import com.readutf.inari.core.scoreboard.ScoreboardProvider;
 import com.readutf.inari.core.utils.serialize.ConfigurationSerializableAdapter;
 import com.readutf.inari.core.utils.serialize.ItemStackAdapter;
 import lombok.Getter;
@@ -56,11 +57,12 @@ public class Game {
 
     private final UUID gameId;
     private final JavaPlugin javaPlugin;
-    private final List<Team> playerTeams;
+    private final List<Team> teams;
     private final ArrayDeque<RoundCreator> stages;
     private final GameEventManager gameEventManager;
     private final DeathManager deathManager;
     private final SpectatorManager spectatorManager;
+    private final ScoreboardManager scoreboardManager;
     private final GameThread gameThread;
     private final Map<String, String> attributes;
     private final GameLoggerFactory loggerFactory;
@@ -68,20 +70,28 @@ public class Game {
     private SpawnFinder playerSpawnFinder;
     private @NotNull GameState gameState;
     private SpawnFinder spectatorSpawnFinder;
+    private ScoreboardProvider scoreboardProvider;
     private GameLang lang;
     private ActiveArena arena;
     private Round currentRound;
 
-    protected Game(JavaPlugin javaPlugin, GameEventManager gameEventManager, ActiveArena intialArena, List<Team> playerTeams, RoundCreator... stageCreators) {
+    protected Game(JavaPlugin javaPlugin,
+                   GameEventManager gameEventManager,
+                   ScoreboardManager scoreboardManager,
+                   ActiveArena intialArena,
+                   List<Team> teams,
+                   RoundCreator... stageCreators
+    ) {
         this.gameId = UUID.randomUUID();
         this.loggerFactory = new GameLoggerFactory(this, gameId1 -> new FlatFileLogStore(gameId1, javaPlugin.getDataFolder()));
         this.javaPlugin = javaPlugin;
         this.arena = intialArena;
-        this.playerTeams = playerTeams;
+        this.teams = teams;
         this.gameEventManager = gameEventManager;
         this.attributes = new HashMap<>();
         this.spectatorManager = new SpectatorManager(this);
         this.lang = new DefaultGameLang();
+        this.scoreboardManager = scoreboardManager;
         this.gameThread = new GameThread(this);
         this.stages = new ArrayDeque<>(Arrays.asList(stageCreators));
         this.deathManager = new DeathManager(this);
@@ -89,14 +99,20 @@ public class Game {
 
         timer.schedule(gameThread, 0, 1);
 
-        ChunkListeners.register(javaPlugin);
-
         Arrays.asList(
                 new TestListener(),
                 new DeathListeners(deathManager),
                 new SpectatorListeners(this),
-                new RejoinListeners(this)
+                new RejoinListeners(this),
+                new ScoreboardListeners(this)
         ).forEach(this::registerListeners);
+    }
+
+    public void setScoreboard(ScoreboardProvider provider) {
+        this.scoreboardProvider = provider;
+        for (Player onlinePlayer : getOnlinePlayers()) {
+            scoreboardManager.setPlayerBoard(onlinePlayer, provider);
+        }
     }
 
     public void start() throws GameException {
@@ -233,11 +249,11 @@ public class Game {
     }
 
     public Team getTeamById(int index) {
-        return playerTeams.get(index);
+        return teams.get(index);
     }
 
     public int getTeamIndex(Team team) {
-        return playerTeams.indexOf(team);
+        return teams.indexOf(team);
     }
 
     public int getTeamIndex(UUID player) {
@@ -249,14 +265,14 @@ public class Game {
     }
 
     public Team getTeamByPlayer(UUID playerId) {
-        for (Team playerTeam : playerTeams) {
+        for (Team playerTeam : teams) {
             if (playerTeam.getPlayers().contains(playerId)) return playerTeam;
         }
         return null;
     }
 
     public List<Team> getAliveTeams() {
-        return playerTeams.stream().filter(team -> team.getPlayers().stream().anyMatch(this::isAlive)).toList();
+        return teams.stream().filter(team -> team.getPlayers().stream().anyMatch(this::isAlive)).toList();
     }
 
     public @Nullable <T> T getAttribute(String key, Class<T> clazz) {
@@ -281,7 +297,7 @@ public class Game {
 
     public List<UUID> getAllPlayers() {
         List<UUID> list = new ArrayList<>();
-        for (Team playerTeam : playerTeams) {
+        for (Team playerTeam : teams) {
             List<UUID> players = playerTeam.getPlayers();
             list.addAll(players);
         }
@@ -291,8 +307,9 @@ public class Game {
     public static GameBuilder builder(JavaPlugin javaPlugin,
                                       ActiveArena intialArena,
                                       GameEventManager gameEventManager,
+                                      ScoreboardManager scoreboardManager,
                                       List<Team> playerTeams,
                                       RoundCreator... stageCreators) {
-        return new GameBuilder(javaPlugin, intialArena, gameEventManager, playerTeams, stageCreators);
+        return new GameBuilder(javaPlugin, intialArena, gameEventManager, scoreboardManager, playerTeams, stageCreators);
     }
 }
