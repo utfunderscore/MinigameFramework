@@ -1,0 +1,325 @@
+package com.readutf.inari.core.arena.stores.gridworld;
+
+import ca.spottedleaf.concurrentutil.completable.Completable;
+import com.fastasyncworldedit.core.Fawe;
+import com.fastasyncworldedit.core.extent.processor.lighting.RelightMode;
+import com.fastasyncworldedit.core.extent.processor.lighting.Relighter;
+import com.google.gson.Gson;
+import com.readutf.inari.core.arena.ActiveArena;
+import com.readutf.inari.core.arena.Arena;
+import com.readutf.inari.core.arena.ArenaManager;
+import com.readutf.inari.core.arena.GridPositionManager;
+import com.readutf.inari.core.arena.exceptions.ArenaLoadException;
+import com.readutf.inari.core.arena.marker.MarkerScanner;
+import com.readutf.inari.core.arena.meta.ArenaMeta;
+import com.readutf.inari.core.arena.stores.schematic.SchematicArenaManager;
+import com.readutf.inari.core.game.Game;
+import com.readutf.inari.core.logging.Logger;
+import com.readutf.inari.core.logging.LoggerFactory;
+import com.readutf.inari.core.utils.ChunkCopy;
+import com.readutf.inari.core.utils.Position;
+import com.readutf.inari.core.utils.WorldCuboid;
+import com.sk89q.worldedit.WorldEdit;
+import com.sk89q.worldedit.bukkit.BukkitAdapter;
+import com.sk89q.worldedit.extension.platform.Platform;
+import lombok.Getter;
+import lombok.SneakyThrows;
+import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.chunk.LevelChunkSection;
+import org.bukkit.*;
+import org.bukkit.craftbukkit.v1_20_R3.CraftChunk;
+import org.bukkit.craftbukkit.v1_20_R3.CraftWorld;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
+
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.Predicate;
+
+public class GridArenaManager extends ArenaManager {
+
+    private static final Logger logger = LoggerFactory.getLogger(GridArenaManager.class);
+    private static final Gson gson = new Gson();
+    private static final World templateArenaWorld;
+    private @Getter static final World activeArenasWorld;
+
+    private static final ExecutorService executorService = Executors.newCachedThreadPool();
+
+    static {
+
+        WorldCreator worldCreator = new WorldCreator("template_arenas");
+        worldCreator.type(WorldType.FLAT);
+        worldCreator.generator(new SchematicArenaManager.VoidChunkGenerator());
+        templateArenaWorld = worldCreator.createWorld();
+        templateArenaWorld.setAutoSave(false);
+
+        WorldCreator activeArenas = new WorldCreator("active_arenas");
+        activeArenas.type(WorldType.FLAT);
+        activeArenas.generator(new SchematicArenaManager.VoidChunkGenerator());
+        activeArenasWorld = activeArenas.createWorld();
+        activeArenasWorld.setAutoSave(false);
+    }
+
+    private final JavaPlugin javaPlugin;
+    private final File arenasFolder;
+    private final GridSettings gridSettings;
+    private final GridPositionManager gridPositionManager;
+    private final List<ArenaMeta> availableArenas;
+    private final Map<ArenaMeta, List<ActiveArena>> activeArenaBuffer = new HashMap<>();
+
+    @SneakyThrows
+    public GridArenaManager(JavaPlugin javaPlugin, File baseDir, MarkerScanner markerScanner) {
+        super(markerScanner);
+        this.javaPlugin = javaPlugin;
+        arenasFolder = new File(baseDir, "arenas");
+        arenasFolder.mkdirs();
+        this.gridPositionManager = new GridPositionManager(1000);
+        this.availableArenas = loadAvailableArenas();
+        File file = new File(baseDir, "grid_settings.json");
+
+        if (file.exists()) {
+            gridSettings = gson.fromJson(new FileReader(file), GridSettings.class);
+        } else {
+            gridSettings = new GridSettings(0, 0);
+            FileWriter fileWriter = new FileWriter(file);
+            gson.toJson(gridSettings, fileWriter);
+            fileWriter.close();
+        }
+
+        for (ArenaMeta availableArena : availableArenas) {
+            List<ActiveArena> arenas = new ArrayList<>();
+            for (int i = 0; i < availableArena.getBufferSize(); i++) {
+                arenas.add(load(availableArena).join());
+            }
+            activeArenaBuffer.put(availableArena, arenas);
+        }
+
+    }
+
+    @Override
+    protected void save(WorldCuboid worldCuboid, Arena arena) {
+
+        World world = worldCuboid.getWorld();
+
+        Location minLoc = worldCuboid.getMin().toLocation(worldCuboid.getWorld());
+        Chunk minChunk = minLoc.getChunk();
+
+        Position max = worldCuboid.getMax();
+        Position min = worldCuboid.getMin();
+
+        int currentX = gridSettings.getCurrentX();
+
+        int startChunkX = min.getBlockX() >> 4;
+        int startChunkZ = min.getBlockZ() >> 4;
+
+        int endChunkX = (max.getBlockX() >> 4) + 1;
+        int endChunkZ = (max.getBlockZ() >> 4) + 1;
+
+
+        int startChunkMinX = (int) (min.getX() - (minChunk.getX() * 16));
+        int startChunkMinZ = (int) (min.getZ() - (minChunk.getZ() * 16));
+
+        for (int x = startChunkX; x < endChunkX; x++) {
+            for (int z = startChunkZ; z < endChunkZ; z++) {
+
+                Chunk chunk = world.getChunkAt(x, z);
+                if (!chunk.isLoaded()) chunk.load();
+
+                int relChunkX = chunk.getX() - minChunk.getX();
+                int relChunkZ = chunk.getZ() - minChunk.getZ();
+
+                LevelChunkSection[] sections = ChunkCopy.copy(((LevelChunk) ((CraftChunk) chunk).getHandle(ChunkStatus.FULL)));
+
+                ChunkCopy.paste(((CraftWorld) templateArenaWorld).getHandle(), sections, currentX + relChunkX, relChunkZ);
+            }
+        }
+
+        templateArenaWorld.save();
+
+        arena = arena.normalize();
+        arena = arena.makeRelative(new Position(startChunkMinX, min.getBlockY(), startChunkMinZ));
+
+        File arenaFolder = new File(arenasFolder, arena.getArenaMeta().getName());
+        if (arenaFolder.mkdirs()) {
+            logger.info("Created arena folder for " + arena.getArenaMeta().getName());
+        }
+
+        try {
+            FileWriter writer = new FileWriter(new File(arenaFolder, "arena.json"));
+            Game.getGson().toJson(arena, writer);
+            writer.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        availableArenas.add(arena.getArenaMeta());
+
+    }
+
+    @Override
+    public CompletableFuture<ActiveArena> load(ArenaMeta arenaMeta) throws ArenaLoadException {
+
+        List<ActiveArena> bufferedArenas = activeArenaBuffer.getOrDefault(arenaMeta, new ArrayList<>());
+
+        if (!bufferedArenas.isEmpty()) {
+            ActiveArena buffered = bufferedArenas.get(0);
+            bufferedArenas.remove(buffered);
+            activeArenaBuffer.put(arenaMeta, bufferedArenas);
+
+            CompletableFuture.runAsync(() -> {
+                try {
+                    spawnNewArena(arenaMeta);
+                } catch (ArenaLoadException e) {
+                    e.printStackTrace();
+                }
+            });
+
+            return CompletableFuture.completedFuture(buffered);
+        }
+
+        return spawnNewArena(arenaMeta);
+    }
+
+    @NotNull
+    private CompletableFuture<ActiveArena> spawnNewArena(ArenaMeta arenaMeta) throws ArenaLoadException {
+
+        long start = System.currentTimeMillis();
+
+        File arenaFolder = new File(arenasFolder, arenaMeta.getName());
+        GridPositionManager.GridSpace next = gridPositionManager.next();
+        System.out.println(next);
+
+        try {
+            Arena arena = Game.getGson().fromJson(new FileReader(new File(arenaFolder, "arena.json")), Arena.class);
+
+            Position max = arena.getBounds().getMax();
+            Position min = arena.getBounds().getMin();
+            Location minLoc = min.toLocation(templateArenaWorld);
+
+            Chunk minChunk = minLoc.getChunk();
+            int gridX = next.getX() >> 4;
+            int gridZ = next.getZ() >> 4;
+
+            int startChunkX = min.getBlockX() >> 4;
+            int startChunkZ = min.getBlockZ() >> 4;
+
+            int endChunkX = (max.getBlockX() >> 4) + 1;
+            int endChunkZ = (max.getBlockZ() >> 4) + 1;
+
+            int targetMinPosX = (gridX << 4) + ((startChunkX * 16) + min.getBlockX());
+            int targetMinPosZ = (gridZ << 4) + ((startChunkZ * 16) + min.getBlockZ());
+
+            System.out.println(targetMinPosX);
+
+            ArrayDeque<Runnable> toPaste = new ArrayDeque<>();
+
+            Platform platform = WorldEdit.getInstance().getPlatformManager().getPlatforms().get(0);
+
+            long start1 = System.currentTimeMillis();
+            logger.info("part1 took " + (start1 - start) + "ms");
+
+            com.sk89q.worldedit.world.World weWorld = BukkitAdapter.adapt(activeArenasWorld);
+            Relighter relighter = platform.getRelighterFactory().createRelighter(RelightMode.ALL, weWorld, Fawe.instance().getQueueHandler().getQueue(weWorld));
+
+            logger.info("Relighter created in " + (System.currentTimeMillis() - start1) + "ms");
+
+            long start2 = System.currentTimeMillis();
+            for (int x = startChunkX; x < endChunkX; x++) {
+                for (int z = startChunkZ; z < endChunkZ; z++) {
+
+
+                    int relChunkX = x - minChunk.getX();
+                    int relChunkZ = z - minChunk.getZ();
+
+                    relighter.addChunk(x, z, null, 65535);
+
+                    int finalX = x;
+                    int finalZ = z;
+
+                    toPaste.add(() -> {
+                        Chunk chunk = templateArenaWorld.getChunkAt(finalX, finalZ);
+                        if (!chunk.isLoaded()) chunk.load();
+                        LevelChunkSection[] sections = ChunkCopy.copy(((LevelChunk) ((CraftChunk) chunk).getHandle(ChunkStatus.FULL)));
+                        if(sections.length == 0) return;
+                        ChunkCopy.paste(((CraftWorld) activeArenasWorld).getHandle(), sections, gridX + relChunkX, gridZ + relChunkZ);
+                    });
+                }
+            }
+            logger.info("Prepared " + toPaste.size() + " chunks to be pasted in " + (System.currentTimeMillis() - start2) + "ms");
+
+            long start3 = System.currentTimeMillis();
+            relighter.removeAndRelight(true);
+
+
+            arena = arena.normalize();
+            arena = arena.makeRelative(new Position(targetMinPosX, min.getBlockY(), targetMinPosZ));
+
+
+//            CompletableFuture<Boolean> pasteCompleteFuture = new ChunkCopyBalancer(toPaste, 50).start(javaPlugin);
+            List<CompletableFuture<Void>> futures = toPaste.stream().map(runnable -> CompletableFuture.runAsync(runnable, executorService)).toList();
+            logger.info("Part 3 in " + (System.currentTimeMillis() - start3) + "ms");
+            long start4 = System.currentTimeMillis();
+
+            CompletableFuture<Void> pasteCompleteFuture = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+
+            CompletableFuture<ActiveArena> arenaReadyFuture = new CompletableFuture<>();
+
+            Arena finalArena = arena;
+            pasteCompleteFuture.thenAccept(aBoolean -> {
+                logger.info("Pasted " + toPaste.size() + " chunks in " + (System.currentTimeMillis() - start4) + "ms");
+                logger.info("Spawned arena " + finalArena.getArenaMeta().getName() + " in " + (System.currentTimeMillis() - start) + "ms");
+                arenaReadyFuture.complete(new ActiveArena(activeArenasWorld, finalArena, arena1 -> {}));
+            });
+
+            return arenaReadyFuture;
+
+        } catch (Exception e) {
+            throw new ArenaLoadException(e.getMessage(), e);
+        }
+    }
+
+
+    public List<ArenaMeta> loadAvailableArenas() {
+        List<ArenaMeta> available = new ArrayList<>();
+
+        File[] files = arenasFolder.listFiles();
+        if (files == null) return Collections.emptyList();
+        for (File file : files) {
+            if (file.isDirectory()) {
+                File arenaFile = new File(file, "arena.json");
+                if (arenaFile.exists()) {
+                    try {
+                        Arena arena = Game.getGson().fromJson(new FileReader(arenaFile), Arena.class);
+                        available.add(arena.getArenaMeta());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+        return available;
+    }
+
+    @Override
+    public void unload(Arena arena) {
+
+    }
+
+    @Override
+    public List<ArenaMeta> findAvailableArenas(Predicate<ArenaMeta> predicate) {
+        List<ArenaMeta> list = new ArrayList<>();
+        for (ArenaMeta arenaMeta : availableArenas) {
+            if (predicate.test(arenaMeta)) {
+                list.add(arenaMeta);
+            }
+        }
+        return list;
+    }
+}

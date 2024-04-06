@@ -25,9 +25,6 @@ repositories {
 compileJava {
     options.compilerArgs += ["-parameters"]
     options.fork = true
-
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
 }
 
 dependencies {
@@ -56,6 +53,12 @@ dependencies {
 
     implementation 'fr.mrmicky:fastboard:2.1.0'
 
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
 }
 
 test {

@@ -1,4 +1,4 @@
-package com.readutf.inari.core.arena.stores.gridloader;
+package com.readutf.inari.core.arena.stores.schematic;
 
 import com.readutf.inari.core.arena.ActiveArena;
 import com.readutf.inari.core.arena.Arena;
@@ -7,8 +7,8 @@ import com.readutf.inari.core.arena.exceptions.ArenaLoadException;
 import com.readutf.inari.core.arena.exceptions.ArenaStoreException;
 import com.readutf.inari.core.arena.marker.MarkerScanner;
 import com.readutf.inari.core.arena.meta.ArenaMeta;
-import com.readutf.inari.core.arena.stores.gridloader.grid.GridPositionManager;
-import com.readutf.inari.core.arena.stores.gridloader.loader.ArenaBuildLoader;
+import com.readutf.inari.core.arena.GridPositionManager;
+import com.readutf.inari.core.arena.stores.schematic.loader.ArenaBuildLoader;
 import com.readutf.inari.core.game.Game;
 import com.readutf.inari.core.logging.Logger;
 import com.readutf.inari.core.logging.LoggerFactory;
@@ -38,9 +38,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 public class SchematicArenaManager extends ArenaManager {
 
@@ -95,7 +93,7 @@ public class SchematicArenaManager extends ArenaManager {
         File arenaFolder = new File(arenasFolder, arena.getName());
         if (arenaFolder.mkdirs()) logger.info("Created arena folder");
 
-        arena = arena.makeRelative();
+        arena = arena.normalize();
 
         try {
             WorldEditUtils.runTask(javaPlugin, () -> {
@@ -120,7 +118,7 @@ public class SchematicArenaManager extends ArenaManager {
     }
 
     @Override
-    public ActiveArena load(ArenaMeta arenaMeta) throws ArenaLoadException {
+    public CompletableFuture<ActiveArena> load(ArenaMeta arenaMeta) throws ArenaLoadException {
 
         ArrayDeque<Arena> cachedArenas = this.cachedArenas.get(arenaMeta);
         if (!cachedArenas.isEmpty()) {
@@ -140,7 +138,7 @@ public class SchematicArenaManager extends ArenaManager {
                 if (arena == null) logger.error("Arena not found");
             });
 
-            return new ActiveArena(world, cachedArenas.poll(), this::unload);
+            return CompletableFuture.completedFuture(new ActiveArena(world, cachedArenas.poll(), this::unload));
         }
 
         Arena arena;
@@ -155,7 +153,7 @@ public class SchematicArenaManager extends ArenaManager {
         if (arena == null) throw new ArenaLoadException("Arena not found");
 
 
-        return new ActiveArena(world, arena, this::unload);
+        return CompletableFuture.completedFuture( new ActiveArena(world, arena, this::unload));
     }
 
     @Override

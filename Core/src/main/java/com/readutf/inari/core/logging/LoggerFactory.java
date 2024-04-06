@@ -6,6 +6,4 @@ public class LoggerFactory {
         return new GenericLogger(org.slf4j.LoggerFactory.getLogger("Inari/" + clazz.getSimpleName()));
     }
 
-
-
 }

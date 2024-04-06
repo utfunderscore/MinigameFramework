@@ -3,7 +3,6 @@ package com.readutf.inari.core.game;
 import com.google.common.base.Preconditions;
 import com.readutf.inari.core.arena.ActiveArena;
 import com.readutf.inari.core.event.GameEventManager;
-import com.readutf.inari.core.game.spawning.SpawnFinder;
 import com.readutf.inari.core.game.spawning.SpawnFinderFactory;
 import com.readutf.inari.core.game.stage.RoundCreator;
 import com.readutf.inari.core.game.team.Team;
@@ -11,7 +10,6 @@ import com.readutf.inari.core.scoreboard.ScoreboardManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
-import java.util.UUID;
 
 public class GameBuilder {
 

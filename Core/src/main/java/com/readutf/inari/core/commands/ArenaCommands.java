@@ -3,12 +3,13 @@ package com.readutf.inari.core.commands;
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.Subcommand;
-import com.readutf.inari.core.arena.Arena;
 import com.readutf.inari.core.arena.ArenaManager;
 import com.readutf.inari.core.arena.exceptions.ArenaLoadException;
 import com.readutf.inari.core.arena.exceptions.ArenaStoreException;
 import com.readutf.inari.core.arena.meta.ArenaMeta;
 import com.readutf.inari.core.arena.selection.SelectionManager;
+import com.readutf.inari.core.arena.stores.gridworld.GridArenaManager;
+import com.readutf.inari.core.utils.ColorUtils;
 import com.readutf.inari.core.utils.WorldCuboid;
 import lombok.AllArgsConstructor;
 import net.md_5.bungee.api.ChatColor;
@@ -18,7 +19,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.List;
 
-@CommandAlias("arena")
+@CommandAlias( "arena" )
 @AllArgsConstructor
 public class ArenaCommands extends BaseCommand {
 
@@ -26,7 +27,7 @@ public class ArenaCommands extends BaseCommand {
     private final SelectionManager selectionManager;
     private final ArenaManager arenaManager;
 
-    @Subcommand("create")
+    @Subcommand( "create" )
     public void createArena(Player player, String name) {
 
         WorldCuboid selection = selectionManager.getSelection(player);
@@ -35,19 +36,18 @@ public class ArenaCommands extends BaseCommand {
             return;
         }
         try {
+            ArenaMeta arena = arenaManager.createArena(name, selection);
 
-            Arena arena = arenaManager.createArena(name, selection);
-
-            player.sendMessage(ChatColor.GREEN + "Created arena " + arena.getName() + " with " + arena.getMarkers().size() + " markers.");
+            player.sendMessage(ColorUtils.color("&aCreated arena " + arena.getName() + " with " + arena.getNumOfMarkers() + " markers."));
         } catch (ArenaStoreException e) {
             e.printStackTrace();
-            player.sendMessage(ChatColor.RED + "Could not create arena: " + e.getLocalizedMessage());
+            player.sendMessage(ColorUtils.color("&cCould not create arena: " + e.getLocalizedMessage()));
         }
 
 
     }
 
-    @Subcommand("testload")
+    @Subcommand( "testload" )
     public void testLoad(Player player) {
 
         try {
@@ -57,18 +57,23 @@ public class ArenaCommands extends BaseCommand {
 
             availableArenas.stream().findFirst().ifPresent(arenaMeta -> {
                 try {
-                    Arena arena = arenaManager.load(arenaMeta);
+                    arenaManager.load(arenaMeta).thenAccept(arena -> {
 
-                    player.sendMessage(ChatColor.GREEN + "Loaded arena " + arenaMeta.getName());
 
-//                    player.teleport(arena.getBounds().getMin().toLocation(SchematicArenaManager.getWorld()));
+                        player.sendMessage(ChatColor.GREEN + "Loaded arena " + arenaMeta.getName());
 
-                    new BukkitRunnable() {
-                        @Override
-                        public void run() {
-                            arenaManager.unload(arena);
-                        }
-                    }.runTaskLater(javaPlugin, 20 * 5);
+                        System.out.println(arena);
+
+                        player.teleport(arena.getBounds().getMin().toLocation(GridArenaManager.getActiveArenasWorld()));
+
+                        new BukkitRunnable() {
+                            @Override
+                            public void run() {
+                                arenaManager.unload(arena);
+                            }
+                        }.runTaskLater(javaPlugin, 20 * 5);
+                    });
+
 
                 } catch (ArenaLoadException e) {
                     e.getException().printStackTrace();

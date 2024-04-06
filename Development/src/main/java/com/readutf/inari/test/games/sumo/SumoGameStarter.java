@@ -38,8 +38,6 @@ public class SumoGameStarter implements GameStarter {
         List<ArenaMeta> availableArenas = arenaManager.findAvailableArenas(arenaMeta -> arenaMeta.getName().startsWith("sumo"));
         if(availableArenas.isEmpty()) throw new Exception("No available arenas");
 
-        ActiveArena load = arenaManager.load(availableArenas.get(ThreadLocalRandom.current().nextInt(availableArenas.size())));
-
         List<Team> teams = new ArrayList<>();
         for (int i = 0; i < playerTeams.size(); i++) {
             List<UUID> players = playerTeams.get(i);
@@ -48,25 +46,32 @@ public class SumoGameStarter implements GameStarter {
 
         CompletableFuture<Game> future = new CompletableFuture<>();
 
-        Game createdMatch = Game.builder(InariDemo.getInstance(), load, eventManager, scoreboardManager, teams,
-                        (game, previousRound) -> new AwaitingPlayersStage(game, 2, 60),
-                        (game, previousRound) -> new SumoRound(game, null),
-                        (game, previousRound) -> new SumoRound(game, (SumoRound) previousRound),
-                        (game, previousRound) -> new SumoRound(game, (SumoRound) previousRound),
-                        (game, previousRound) -> new SumoRound(game, (SumoRound) previousRound),
-                        (game, previousRound) -> new SumoRound(game, (SumoRound) previousRound))
-                .setPlayerSpawnHandler(game -> new TeamBasedSpawning(game, "spawn"))
-                .setSpectatorSpawnHandler(SumoSpectatorSpawnFinder::new)
-                .build();
+        CompletableFuture<ActiveArena> arenaFuture = arenaManager.load(availableArenas.get(ThreadLocalRandom.current().nextInt(availableArenas.size())));
 
-        ThreadUtils.ensureSync(InariDemo.getInstance(), () -> {
-            try {
-                gameManager.startGame(createdMatch);
-                future.complete(createdMatch);
-            } catch (GameException e) {
-                future.completeExceptionally(e);
-            }
+        arenaFuture.thenAccept(activeArena -> {
+
+            Game createdMatch = Game.builder(InariDemo.getInstance(), activeArena, eventManager, scoreboardManager, teams,
+                            (game, previousRound) -> new AwaitingPlayersStage(game, 2, 60),
+                            (game, previousRound) -> new SumoRound(game, null),
+                            (game, previousRound) -> new SumoRound(game, (SumoRound) previousRound),
+                            (game, previousRound) -> new SumoRound(game, (SumoRound) previousRound),
+                            (game, previousRound) -> new SumoRound(game, (SumoRound) previousRound),
+                            (game, previousRound) -> new SumoRound(game, (SumoRound) previousRound))
+                    .setPlayerSpawnHandler(game -> new TeamBasedSpawning(game, "spawn"))
+                    .setSpectatorSpawnHandler(SumoSpectatorSpawnFinder::new)
+                    .build();
+
+            ThreadUtils.ensureSync(InariDemo.getInstance(), () -> {
+                try {
+                    gameManager.startGame(createdMatch);
+                    future.complete(createdMatch);
+                } catch (GameException e) {
+                    future.completeExceptionally(e);
+                }
+            });
         });
+
+
         return future;
     }
 }

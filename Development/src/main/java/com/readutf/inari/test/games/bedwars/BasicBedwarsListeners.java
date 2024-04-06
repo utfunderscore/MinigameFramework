@@ -7,12 +7,10 @@ import com.readutf.inari.core.game.spectator.SpectatorData;
 import com.readutf.inari.core.game.team.Team;
 import com.readutf.inari.core.utils.ColorUtils;
 import com.readutf.inari.core.utils.Position;
-import lombok.RequiredArgsConstructor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 

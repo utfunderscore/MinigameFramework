@@ -5,7 +5,6 @@ import com.readutf.inari.core.arena.marker.Marker;
 import com.readutf.inari.core.game.Game;
 import com.readutf.inari.core.game.exception.GameException;
 import com.readutf.inari.core.game.spawning.SpawnFinder;
-import com.readutf.inari.core.logging.GameLoggerFactory;
 import com.readutf.inari.core.logging.Logger;
 import com.readutf.inari.core.utils.NumberUtils;
 import org.bukkit.Location;

@@ -1,7 +1,7 @@
-package com.readutf.inari.core.arena.stores.gridloader.loader.impl;
+package com.readutf.inari.core.arena.stores.schematic.loader.impl;
 
 import com.readutf.inari.core.arena.exceptions.ArenaStoreException;
-import com.readutf.inari.core.arena.stores.gridloader.loader.ArenaBuildLoader;
+import com.readutf.inari.core.arena.stores.schematic.loader.ArenaBuildLoader;
 import com.readutf.inari.core.logging.Logger;
 import com.readutf.inari.core.logging.LoggerFactory;
 import com.readutf.inari.core.utils.Position;

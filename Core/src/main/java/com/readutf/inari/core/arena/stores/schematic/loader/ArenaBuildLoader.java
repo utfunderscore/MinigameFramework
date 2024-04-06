@@ -1,4 +1,4 @@
-package com.readutf.inari.core.arena.stores.gridloader.loader;
+package com.readutf.inari.core.arena.stores.schematic.loader;
 
 import com.readutf.inari.core.arena.exceptions.ArenaStoreException;
 import com.readutf.inari.core.utils.Position;

@@ -29,7 +29,7 @@ public class Arena {
         return markers.stream().filter(marker -> marker.getName().equalsIgnoreCase(markerName)).findFirst().orElse(null);
     }
 
-    public @JsonIgnore Arena makeRelative() {
+    public @JsonIgnore Arena normalize() {
         Position relativePoint = bounds.getMin();
 
         Cuboid newBounds = new Cuboid(new Position(0, 0, 0), bounds.getMax().subtract(relativePoint));
@@ -41,7 +41,7 @@ public class Arena {
     public @JsonIgnore Arena makeRelative(Position position) {
 
         Cuboid newBounds = new Cuboid(position, bounds.getMax().add(position));
-        List<Marker> newMarkers = markers.stream().map(marker -> new Marker(marker.getName(), marker.getPosition().add(position), marker.getOffset(),marker.getYaw())).toList();
+        List<Marker> newMarkers = markers.stream().map(marker -> new Marker(marker.getName(), marker.getPosition().add(position), marker.getOffset(), marker.getYaw())).toList();
 
         return new Arena(name, newBounds, arenaMeta, newMarkers);
     }
@@ -57,4 +57,13 @@ public class Arena {
         return markers.stream().filter(marker -> marker.getName().startsWith(prefix)).toList();
     }
 
+    @Override
+    public String toString() {
+        return "Arena{" +
+                "name='" + name + '\'' +
+                ", bounds=" + bounds +
+                ", arenaMeta=" + arenaMeta +
+                ", markers=" + markers +
+                '}';
+    }
 }

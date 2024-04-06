@@ -1,6 +1,5 @@
-package com.readutf.inari.core.arena.stores.gridloader.grid;
+package com.readutf.inari.core.arena;
 
-import com.readutf.inari.core.logging.GameLoggerFactory;
 import com.readutf.inari.core.logging.Logger;
 import com.readutf.inari.core.logging.LoggerFactory;
 import lombok.Getter;

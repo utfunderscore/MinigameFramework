@@ -48,14 +48,6 @@ public class BedwarsStarter implements GameStarter {
     @Override
     public CompletableFuture<Game> startGame(List<List<UUID>> teams) throws Exception {
 
-
-        List<ArenaMeta> availableArenas = arenaManager.findAvailableArenas(arenaMeta -> arenaMeta.getName().startsWith("bedwars"));
-        if (availableArenas.isEmpty()) throw new Exception("No available arenas");
-
-        ActiveArena load = arenaManager.load(availableArenas.get(ThreadLocalRandom.current().nextInt(availableArenas.size())));
-
-        CompletableFuture<Game> future = new CompletableFuture<>();
-
         List<Map.Entry<String, TeamColor>> teamColorsSet = new ArrayList<>(TEAM_COLORS.entrySet());
 
         List<Team> createdTeams = new ArrayList<>();
@@ -64,21 +56,30 @@ public class BedwarsStarter implements GameStarter {
             createdTeams.add(new BedwarsTeam(color.getKey(), color.getValue(), teams.get(i)));
         }
 
-        Game createdMatch = Game.builder(InariDemo.getInstance(), load, eventManager, scoreboardManager, createdTeams,
-                        (game, previousRound) -> new AwaitingPlayersStage(game, 2, 10),
-                        (game, previousRound) -> new BedwarsRound(game))
-                .setPlayerSpawnHandler(game -> new TeamBasedSpawning(game, "spawn"))
-                .setSpectatorSpawnHandler(SumoSpectatorSpawnFinder::new)
-                .build();
+        List<ArenaMeta> availableArenas = arenaManager.findAvailableArenas(arenaMeta -> arenaMeta.getName().startsWith("bedwars"));
+        if (availableArenas.isEmpty()) throw new Exception("No available arenas");
 
-        ThreadUtils.ensureSync(InariDemo.getInstance(), () -> {
-            try {
-                gameManager.startGame(createdMatch);
-                future.complete(createdMatch);
-            } catch (GameException e) {
-                future.completeExceptionally(e);
-            }
+        CompletableFuture<Game> future = new CompletableFuture<>();
+        CompletableFuture<ActiveArena> load = arenaManager.load(availableArenas.get(ThreadLocalRandom.current().nextInt(availableArenas.size())));
+        load.thenAccept(activeArena -> {
+            Game createdMatch = Game.builder(InariDemo.getInstance(), activeArena, eventManager, scoreboardManager, createdTeams,
+                            (game, previousRound) -> new AwaitingPlayersStage(game, 2, 10),
+                            (game, previousRound) -> new BedwarsRound(game))
+                    .setPlayerSpawnHandler(game -> new TeamBasedSpawning(game, "spawn"))
+                    .setSpectatorSpawnHandler(SumoSpectatorSpawnFinder::new)
+                    .build();
+
+            ThreadUtils.ensureSync(InariDemo.getInstance(), () -> {
+                try {
+                    gameManager.startGame(createdMatch);
+                    future.complete(createdMatch);
+                } catch (GameException e) {
+                    future.completeExceptionally(e);
+                }
+            });
         });
+
+
         return future;
     }
 }
