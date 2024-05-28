@@ -8,6 +8,7 @@ import com.readutf.inari.core.arena.stores.gridworld.GridArenaManager;
 import com.readutf.inari.core.commands.ArenaCommands;
 import com.readutf.inari.core.commands.EventDebugCommand;
 import com.readutf.inari.core.commands.completions.GameCompletions;
+import com.readutf.inari.core.commands.completions.GameMakerCommand;
 import com.readutf.inari.core.event.GameEventManager;
 import com.readutf.inari.core.game.GameManager;
 import com.readutf.inari.core.scoreboard.ScoreboardManager;
@@ -18,6 +19,9 @@ import com.readutf.inari.test.listeners.DemoListeners;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.Arrays;
+import java.util.List;
 
 @Getter
 public class InariDemo extends JavaPlugin {
@@ -49,10 +53,15 @@ public class InariDemo extends JavaPlugin {
         paperCommandManager.getCommandCompletions().registerCompletion("gametypes", c -> gameStarterManager.getGameStarters());
 
 
-        paperCommandManager.registerCommand(new ArenaCommands(this, worldEditSelectionManager, arenaManager));
-        paperCommandManager.registerCommand(new DevCommand(gameManager, arenaManager, gameEventManager));
-        paperCommandManager.registerCommand(new EventDebugCommand(gameEventManager));
-        paperCommandManager.registerCommand(new GameCommand(gameStarterManager));
+        Arrays.asList(
+                new ArenaCommands(this, worldEditSelectionManager, arenaManager),
+                new DevCommand(gameManager, arenaManager, gameEventManager),
+                new EventDebugCommand(gameEventManager),
+                new GameCommand(gameStarterManager),
+                new GameMakerCommand(gameManager)
+        ).forEach(paperCommandManager::registerCommand);
+
+
 
 
         Bukkit.getPluginManager().registerEvents(new DemoListeners(), this);

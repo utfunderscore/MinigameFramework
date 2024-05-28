@@ -14,6 +14,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 
+import static com.readutf.inari.test.utils.Countdown.startCountdown;
+
 public class SumoEndRound implements Round {
 
     private final Game game;
@@ -53,7 +55,7 @@ public class SumoEndRound implements Round {
             ));
         }
 
-        new Countdown(game, 5, new CancellableTask<>() {
+        startCountdown(game, 5, new CancellableTask<>() {
             @Override
             public void run(Integer integer) {
                 if (integer == 0)

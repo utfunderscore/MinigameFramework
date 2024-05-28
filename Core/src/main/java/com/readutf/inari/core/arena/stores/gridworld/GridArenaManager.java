@@ -1,6 +1,7 @@
 package com.readutf.inari.core.arena.stores.gridworld;
 
 import com.fastasyncworldedit.core.Fawe;
+import com.fastasyncworldedit.core.FaweAPI;
 import com.fastasyncworldedit.core.extent.processor.lighting.RelightMode;
 import com.fastasyncworldedit.core.extent.processor.lighting.Relighter;
 import com.google.gson.Gson;
@@ -15,17 +16,18 @@ import com.readutf.inari.core.arena.stores.schematic.SchematicArenaManager;
 import com.readutf.inari.core.game.Game;
 import com.readutf.inari.core.logging.Logger;
 import com.readutf.inari.core.logging.LoggerFactory;
-import com.readutf.inari.core.utils.ChunkCopy;
-import com.readutf.inari.core.utils.Position;
-import com.readutf.inari.core.utils.WorldCuboid;
+import com.readutf.inari.core.utils.*;
 import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.extension.platform.Platform;
+import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldedit.regions.CuboidRegion;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
+import org.apache.commons.io.FileUtils;
 import org.bukkit.*;
 import org.bukkit.craftbukkit.v1_20_R3.CraftChunk;
 import org.bukkit.craftbukkit.v1_20_R3.CraftWorld;
@@ -99,6 +101,16 @@ public class GridArenaManager extends ArenaManager {
             }
             activeArenaBuffer.put(availableArena, arenas);
         }
+
+        File templatesFolder = new File(baseDir, "./active_arenas");
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                FileUtils.deleteDirectory(templatesFolder);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }));
 
     }
 
@@ -198,8 +210,9 @@ public class GridArenaManager extends ArenaManager {
         try {
             Arena arena = Game.getGson().fromJson(new FileReader(new File(arenaFolder, "arena.json")), Arena.class);
 
-            Position max = arena.getBounds().getMax();
-            Position min = arena.getBounds().getMin();
+            Cuboid bounds = arena.getBounds();
+            Position max = bounds.getMax();
+            Position min = bounds.getMin();
             Location minLoc = min.toLocation(templateArenaWorld);
             Chunk minChunk = minLoc.getChunk();
             int gridX = next.getX() >> 4;
@@ -215,20 +228,29 @@ public class GridArenaManager extends ArenaManager {
             Relighter relighter = createRelighter();
 
             //NOTE: Also adds chunks to relighter
-            ArrayDeque<CompletableFuture<Void>> toPaste = enqueueRelightAndChunkPaste(startChunkX, endChunkX, startChunkZ, endChunkZ, minChunk, relighter, gridX, gridZ);
-            relighter.removeAndRelight(true);
+            ArrayDeque<CompletableFuture<Chunk>> toPaste = enqueueRelightAndChunkPaste(startChunkX, endChunkX, startChunkZ, endChunkZ, minChunk, relighter, gridX, gridZ);
+
 
             arena = arena.normalize();
             arena = arena.makeRelative(new Position(targetMinPosX, min.getBlockY(), targetMinPosZ));
 
-            CompletableFuture<Void> pasteCompleteFuture = CompletableFuture.allOf(toPaste.toArray(new CompletableFuture[0]));
+            CompletableFuture<List<Chunk>> pasteCompleteFuture = FutureUtils.completeAll(toPaste);
 
             CompletableFuture<ActiveArena> arenaReadyFuture = new CompletableFuture<>();
 
             Arena finalArena = arena;
-            pasteCompleteFuture.thenAccept(aBoolean -> {
+            pasteCompleteFuture.thenAccept(chunks -> {
                 logger.info("Spawned arena " + finalArena.getArenaMeta().getName() + " in " + (System.currentTimeMillis() - start) + "ms");
                 arenaReadyFuture.complete(new ActiveArena(activeArenasWorld, finalArena, arena1 -> gridPositionManager.free(next)));
+                Bukkit.getScheduler().scheduleSyncDelayedTask(javaPlugin, () -> {
+                    for (Chunk chunk : chunks) {
+                        chunk.load();
+                    }
+                    Cuboid bounds1 = finalArena.getBounds();
+
+                    FaweAPI.fixLighting(BukkitAdapter.adapt(activeArenasWorld), new CuboidRegion(BlockVector3.at(bounds1.getMax().getX(), bounds1.getMax().getY(), bounds1.getMax().getZ()), BlockVector3.at(bounds1.getMin().getX(), bounds1.getMin().getY(), bounds1.getMin().getZ())), null, RelightMode.ALL);
+                    System.out.println("Relighting: " + bounds1);
+                }, 1);
             });
 
             return arenaReadyFuture;
@@ -243,16 +265,16 @@ public class GridArenaManager extends ArenaManager {
         Platform platform = WorldEdit.getInstance().getPlatformManager().getPlatforms().get(0);
 
         com.sk89q.worldedit.world.World weWorld = BukkitAdapter.adapt(activeArenasWorld);
-        Relighter relighter = platform.getRelighterFactory().createRelighter(RelightMode.ALL, weWorld, Fawe.instance().getQueueHandler().getQueue(weWorld));
+        Relighter relighter = platform.getRelighterFactory().createRelighter(RelightMode.OPTIMAL, weWorld, Fawe.instance().getQueueHandler().getQueue(weWorld));
         return relighter;
     }
 
     @NotNull
-    private static ArrayDeque<CompletableFuture<Void>> enqueueRelightAndChunkPaste(
+    private static ArrayDeque<CompletableFuture<Chunk>> enqueueRelightAndChunkPaste(
             int startChunkX, int endChunkX, int startChunkZ, int endChunkZ,
             Chunk minChunk, Relighter relighter, int gridX, int gridZ
     ) {
-        ArrayDeque<CompletableFuture<Void>> toPaste = new ArrayDeque<>();
+        ArrayDeque<CompletableFuture<Chunk>> toPaste = new ArrayDeque<>();
         for (int x = startChunkX; x < endChunkX; x++) {
             for (int z = startChunkZ; z < endChunkZ; z++) {
                 //calculates where the minimum point will be relative to the minimum point of the chunk, so we can paste it in the correct position
@@ -264,7 +286,7 @@ public class GridArenaManager extends ArenaManager {
                 relighter.addChunk(x, z, null, 65535);
 
                 ChunkCopyTask copyTask = new ChunkCopyTask(templateArenaWorld.getChunkAt(x, z), activeArenasWorld, gridX + relChunkX, gridZ + relChunkZ);
-                toPaste.add(CompletableFuture.runAsync(copyTask, executorService));
+                toPaste.add(CompletableFuture.supplyAsync(copyTask, executorService));
             }
         }
         return toPaste;

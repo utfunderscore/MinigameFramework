@@ -5,6 +5,7 @@ import com.readutf.inari.core.event.GameEventManager;
 import com.readutf.inari.core.game.GameManager;
 import com.readutf.inari.core.scoreboard.ScoreboardManager;
 import com.readutf.inari.test.games.bedwars.BedwarsStarter;
+import com.readutf.inari.test.games.miniwalls.MiniWallsStarter;
 import com.readutf.inari.test.games.sumo.SumoGameStarter;
 
 import javax.annotation.Nullable;
@@ -19,7 +20,8 @@ public class GameStarterManager {
     public GameStarterManager(ArenaManager arenaManager, GameManager gameManager, ScoreboardManager scoreboardManager, GameEventManager eventManager) {
         this.gameStarters = Map.of(
                 "sumo", new SumoGameStarter(arenaManager, gameManager, eventManager, scoreboardManager),
-                "bedwars", new BedwarsStarter(arenaManager, gameManager, eventManager, scoreboardManager)
+                "bedwars", new BedwarsStarter(arenaManager, gameManager, eventManager, scoreboardManager),
+                "miniwalls", new MiniWallsStarter(arenaManager, gameManager, eventManager, scoreboardManager)
         );
     }
 

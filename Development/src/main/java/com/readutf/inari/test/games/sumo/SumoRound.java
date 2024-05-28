@@ -23,6 +23,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import static com.readutf.inari.test.utils.Countdown.startCountdown;
+
 @Getter
 public class SumoRound implements Round {
 
@@ -82,7 +84,7 @@ public class SumoRound implements Round {
             }
         };
 
-        countdown = new Countdown(game, 5, new CancellableTask<>() {
+        countdown = startCountdown(game, 5, new CancellableTask<>() {
             @Override
             public void run(Integer timeLeft) {
 

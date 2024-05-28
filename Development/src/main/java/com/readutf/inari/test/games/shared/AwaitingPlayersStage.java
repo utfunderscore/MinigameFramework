@@ -16,6 +16,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.jetbrains.annotations.Nullable;
 
+import static com.readutf.inari.test.utils.Countdown.startCountdown;
+
 public class AwaitingPlayersStage implements Round {
 
 
@@ -34,7 +36,7 @@ public class AwaitingPlayersStage implements Round {
     @Override
     public void roundStart() {
 
-        new Countdown(game, gameExpireTimeSeconds, new CancellableTask<>() {
+        startCountdown(game, gameExpireTimeSeconds, new CancellableTask<>() {
             @Override
             public void run(Integer integer) {
                 if (checkForValidPlayers(game.getOnlinePlayers().size())) {

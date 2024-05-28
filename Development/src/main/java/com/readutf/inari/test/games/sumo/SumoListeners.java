@@ -32,6 +32,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com.readutf.inari.test.utils.Countdown.startCountdown;
+
 public class SumoListeners {
 
     private final Game game;
@@ -104,7 +106,7 @@ public class SumoListeners {
         teamScores.put(winnerTeam, newScore);
 
 
-        new Countdown(game, 3, new CancellableTask<>() {
+        startCountdown(game, 3, new CancellableTask<>() {
             @Override
             public void run(Integer integer) {
 

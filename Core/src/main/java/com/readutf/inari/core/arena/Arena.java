@@ -8,7 +8,10 @@ import com.readutf.inari.core.utils.Position;
 import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 public class Arena {
@@ -51,6 +54,36 @@ public class Arena {
         Marker marker2 = getMarker(markerName2);
         if (marker1 == null || marker2 == null) return null;
         return new Cuboid(marker1.getPositionWithOffset(), marker2.getPositionWithOffset());
+    }
+
+    /**
+     * Requires the markers to be of the format "{name}:{id}{1/2} e.g {bounds:1:1} and {bounds:1:2}
+     * @param prefix
+     * @return
+     */
+    public @Nullable List<Cuboid> getCuboids(String prefix) {
+        List<Marker> markers = getMarkers(prefix);
+        Set<String> uniqueIds = new HashSet<>();
+
+        for (Marker marker : markers) {
+            String[] split = marker.getName().split(":");
+            if (split.length != 3) continue;
+            uniqueIds.add(split[0]);
+        }
+
+        List<Cuboid> cuboids = new ArrayList<>();
+
+        for (String uniqueId : uniqueIds) {
+            Marker marker1 = getMarker(prefix + ":" + uniqueId + ":1");
+            Marker marker2 = getMarker(prefix + ":" + uniqueId + ":2");
+            System.out.println("marker1: " + prefix + ":" + uniqueId + ":1");
+            System.out.println("marker2: " + prefix + ":" + uniqueId + ":2");
+
+            if (marker1 == null || marker2 == null) continue;
+            cuboids.add(new Cuboid(marker1.getPositionWithOffset(), marker2.getPositionWithOffset()));
+        }
+
+        return cuboids;
     }
 
     public List<Marker> getMarkers(String prefix) {
