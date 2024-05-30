@@ -23,6 +23,17 @@ repositories {
 
 }
 
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = "com.readutf.minigame"
+            artifactId = "core"
+            version = "1.1"
+
+            from(components["java"])
+        }
+    }
+}
 tasks.compileJava {
     options.compilerArgs.add("-parameters")
 }
@@ -56,8 +67,10 @@ dependencies {
 }
 
 java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
 
