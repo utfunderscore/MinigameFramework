@@ -34,9 +34,15 @@ publishing {
         }
     }
 }
+
 tasks.compileJava {
     options.compilerArgs.add("-parameters")
 }
+
+tasks.shadowJar {
+    archiveFileName.set("MinigameFramework.jar")
+}
+
 
 dependencies {
 
