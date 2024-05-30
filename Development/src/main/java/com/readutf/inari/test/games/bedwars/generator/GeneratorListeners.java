@@ -53,7 +53,7 @@ public class GeneratorListeners {
                     pickupPlayers = new ArrayList<>(nearbyPlayers);
                 }
 
-                Player pickedPlayer = pickupPlayers.getFirst();
+                Player pickedPlayer = pickupPlayers.get(0);
                 pickedPlayer.getInventory().addItem(itemStack);
                 history.add(pickedPlayer.getUniqueId());
                 pickupHistory.put(itemStack.getType(), history);

@@ -10,6 +10,7 @@ import java.util.Map;
 @Getter
 public class ArenaMeta {
 
+
     private final String name;
     private final String description;
     private final MaterialData materialData;

@@ -171,7 +171,7 @@ public class SumoListeners {
         System.out.println("added with debug");
 
         if(game.getAliveTeams().size() == 1) {
-            game.endGame(game.getAliveTeams().getFirst(), GameEndReason.ENEMIES_ELIMINATED);
+            game.endGame(game.getAliveTeams().get(0), GameEndReason.ENEMIES_ELIMINATED);
         } else if(game.getAliveTeams().isEmpty()) {
             game.endGame(null, GameEndReason.DRAW);
         }
