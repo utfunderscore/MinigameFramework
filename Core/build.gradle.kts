@@ -35,15 +35,6 @@ publishing {
     }
 }
 
-tasks.compileJava {
-    options.compilerArgs.add("-parameters")
-}
-
-tasks.shadowJar {
-    archiveFileName.set("MinigameFramework.jar")
-}
-
-
 dependencies {
 
     paperweight.paperDevBundle("1.20.4-R0.1-SNAPSHOT")
@@ -56,8 +47,6 @@ dependencies {
 
     compileOnly("com.fastasyncworldedit:FastAsyncWorldEdit-Core")
     compileOnly("com.fastasyncworldedit:FastAsyncWorldEdit-Bukkit")
-
-
 
     testImplementation(platform("org.junit:junit-bom:5.9.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
@@ -72,18 +61,24 @@ dependencies {
 
 }
 
+tasks {
+    test {
+        useJUnitPlatform()
+    }
+    shadowJar {
+        relocate("fr.mrmicky.fastboard", "com.readutf.inari.core")
+        archiveFileName.set("MinigameFramework.jar")
+    }
+
+    compileJava {
+        options.compilerArgs.add("-parameters")
+    }
+}
+
 java {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(17))
     }
-}
-
-tasks.test {
-    useJUnitPlatform()
-}
-
-tasks.shadowJar {
-    relocate("fr.mrmicky.fastboard", "com.readutf.inari.core")
 }
