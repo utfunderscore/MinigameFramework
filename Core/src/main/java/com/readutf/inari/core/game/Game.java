@@ -24,6 +24,8 @@ import com.readutf.inari.core.game.stage.RoundCreator;
 import com.readutf.inari.core.game.task.GameThread;
 import com.readutf.inari.core.game.team.Team;
 import com.readutf.inari.core.logging.GameLoggerFactory;
+import com.readutf.inari.core.logging.Logger;
+import com.readutf.inari.core.logging.impl.GameLogger;
 import com.readutf.inari.core.logging.store.FlatFileLogStore;
 import com.readutf.inari.core.scoreboard.ScoreboardManager;
 import com.readutf.inari.core.scoreboard.ScoreboardProvider;
@@ -39,12 +41,14 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
 @Getter
 @Setter
 public class Game {
+
 
     private static Timer timer = new Timer();
     private static @Getter Gson gson = new GsonBuilder()
@@ -57,6 +61,7 @@ public class Game {
 
     private final UUID gameId;
     private final JavaPlugin javaPlugin;
+    private final Logger logger;
     private final List<Team> teams;
     private final ArrayDeque<RoundCreator> stages;
     private final GameEventManager gameEventManager;
@@ -75,6 +80,8 @@ public class Game {
     private ActiveArena arena;
     private Round currentRound;
 
+
+
     protected Game(JavaPlugin javaPlugin,
                    GameEventManager gameEventManager,
                    ScoreboardManager scoreboardManager,
@@ -87,6 +94,7 @@ public class Game {
         this.javaPlugin = javaPlugin;
         this.arena = intialArena;
         this.teams = teams;
+        this.logger = loggerFactory.getLogger(Game.class);
         this.gameEventManager = gameEventManager;
         this.attributes = new HashMap<>();
         this.spectatorManager = new SpectatorManager(this);
@@ -117,6 +125,8 @@ public class Game {
 
     public void start() throws GameException {
         if (gameState != GameState.WAITING) throw new GameException("Game is already started");
+
+        logger.info("Starting match " + gameId);
 
         startNextRound();
 

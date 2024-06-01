@@ -5,6 +5,8 @@ import com.readutf.inari.core.arena.ArenaManager;
 import com.readutf.inari.core.arena.marker.impl.TileEntityScanner;
 import com.readutf.inari.core.arena.selection.impl.WorldEditSelectionManager;
 import com.readutf.inari.core.arena.stores.gridworld.GridArenaManager;
+import com.readutf.inari.core.arena.stores.schematic.SchematicArenaManager;
+import com.readutf.inari.core.arena.stores.schematic.loader.impl.WorldEditLoader;
 import com.readutf.inari.core.commands.ArenaCommands;
 import com.readutf.inari.core.commands.EventDebugCommand;
 import com.readutf.inari.core.commands.completions.GameCompletions;
@@ -20,6 +22,7 @@ import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
@@ -41,7 +44,8 @@ public class InariDemo extends JavaPlugin {
     public void onEnable() {
 
         WorldEditSelectionManager worldEditSelectionManager = new WorldEditSelectionManager();
-        this.arenaManager = new GridArenaManager(this, getDataFolder(), new TileEntityScanner());
+        this.arenaManager = new SchematicArenaManager(this, new TileEntityScanner(), new WorldEditLoader(this), new File(getDataFolder(), "arenas"));
+//        this.arenaManager = new GridArenaManager(this, getDataFolder(), new TileEntityScanner());
         this.gameManager = new GameManager();
         this.gameEventManager = new GameEventManager(this, gameManager);
         this.gameStarterManager = new GameStarterManager(arenaManager, gameManager, new ScoreboardManager(this), gameEventManager);

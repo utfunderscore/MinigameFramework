@@ -66,10 +66,6 @@ publishing {
     }
 }
 
-tasks.shadowJar {
-    archiveFileName.set("Inari-Dev.jar")
-}
-
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(17))

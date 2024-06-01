@@ -10,6 +10,9 @@ import com.readutf.inari.core.game.exception.GameException;
 import com.readutf.inari.core.game.spawning.impl.TeamBasedSpawning;
 import com.readutf.inari.core.game.team.Team;
 import com.readutf.inari.core.game.team.TeamColor;
+import com.readutf.inari.core.logging.GenericLogger;
+import com.readutf.inari.core.logging.Logger;
+import com.readutf.inari.core.logging.LoggerFactory;
 import com.readutf.inari.core.scoreboard.ScoreboardManager;
 import com.readutf.inari.test.InariDemo;
 import com.readutf.inari.test.games.GameStarter;
@@ -26,6 +29,8 @@ import java.util.concurrent.ThreadLocalRandom;
 @AllArgsConstructor
 public class SumoGameStarter implements GameStarter {
 
+    private static final Logger logger = LoggerFactory.getLogger(SumoGameStarter.class);
+
     private final ArenaManager arenaManager;
     private final GameManager gameManager;
     private final GameEventManager eventManager;
@@ -33,6 +38,8 @@ public class SumoGameStarter implements GameStarter {
 
     @Override
     public CompletableFuture<Game> startGame(List<List<UUID>> playerTeams) throws Exception {
+
+        logger.info("Starting Sumo Game");
 
 
         List<ArenaMeta> availableArenas = arenaManager.findAvailableArenas(arenaMeta -> arenaMeta.getName().startsWith("sumo"));
@@ -46,9 +53,14 @@ public class SumoGameStarter implements GameStarter {
 
         CompletableFuture<Game> future = new CompletableFuture<>();
 
+        logger.info("Finding arena.");
+
         CompletableFuture<ActiveArena> arenaFuture = arenaManager.load(availableArenas.get(ThreadLocalRandom.current().nextInt(availableArenas.size())));
 
         arenaFuture.thenAccept(activeArena -> {
+
+            logger.info("Loaded Arena " + activeArena.getArenaMeta().getName());
+
 
             Game createdMatch = Game.builder(InariDemo.getInstance(), activeArena, eventManager, scoreboardManager, teams,
                             (game, previousRound) -> new AwaitingPlayersStage(game, 2, 60),

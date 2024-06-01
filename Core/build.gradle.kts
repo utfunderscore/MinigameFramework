@@ -1,5 +1,3 @@
-import io.papermc.paperweight.userdev.ReobfArtifactConfiguration
-
 plugins {
     id("java")
     id("maven-publish")
@@ -31,6 +29,9 @@ publishing {
             groupId = "com.readutf.minigame"
             artifactId = "core"
             version = "1.1"
+
+            artifactId = ""
+
 
             from(components["java"])
         }
@@ -67,15 +68,10 @@ tasks {
     test {
         useJUnitPlatform()
     }
-    reobfJar {
-        enabled = false
-    }
 
     shadowJar {
         relocate("fr.mrmicky.fastboard", "com.readutf.inari.core")
-        archiveFileName.set("MinigameFramework.jar")
     }
-
 
     compileJava {
         options.compilerArgs.add("-parameters")

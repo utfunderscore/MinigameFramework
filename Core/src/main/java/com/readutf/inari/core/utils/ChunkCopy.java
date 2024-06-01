@@ -19,15 +19,22 @@ public class ChunkCopy {
     public static LevelChunkSection[] copy(LevelChunk chunk) {
         LevelChunkSection[] sections = chunk.getSections().clone();
 
-        for (int i = 0; i < sections.length; i++) {
-            LevelChunkSection section = sections[i];
-            if (section == null) continue;
 
-            PalettedContainer<BlockState> states = section.getStates().copy();
-            PalettedContainer<Holder<Biome>> biomes = section.getBiomes().recreate();
+         try {
+             for (int i = 0; i < sections.length; i++) {
 
-            sections[i] = new LevelChunkSection(states, biomes);
-        }
+                 LevelChunkSection section = sections[i];
+                 if (section == null) continue;
+
+                 PalettedContainer<BlockState> states = section.getStates().copy();
+                 PalettedContainer<Holder<Biome>> biomes = section.getBiomes().recreate();
+
+                 sections[i] = new LevelChunkSection(states, biomes);
+             }
+
+         } catch (Throwable e) {
+             e.printStackTrace();
+         }
 
         return sections;
     }
@@ -38,7 +45,7 @@ public class ChunkCopy {
         for (int sectionIndex = 0; sectionIndex < sections.length; sectionIndex++) {
             LevelChunkSection copiedSection = sections[sectionIndex];
             if (copiedSection == null) {
-                chunk.getSections()[sectionIndex] = null;
+                chunk.getSections()[sectionIndex] = new LevelChunkSection(BIOME_REGISTRY, level, new ChunkPos(x, z), sectionIndex);
             } else {
                 chunk.getSections()[sectionIndex] = new LevelChunkSection(copiedSection.getStates().copy(), copiedSection.getBiomes().recreate());
             }
