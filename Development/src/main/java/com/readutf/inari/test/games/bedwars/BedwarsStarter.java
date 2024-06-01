@@ -46,7 +46,7 @@ public class BedwarsStarter implements GameStarter {
     );
 
     @Override
-    public CompletableFuture<Game> startGame(List<List<UUID>> teams) throws Exception {
+    public CompletableFuture<Game> startGame(ArenaMeta arenaMeta, List<List<UUID>> teams) throws Exception {
 
         List<Map.Entry<String, TeamColor>> teamColorsSet = new ArrayList<>(TEAM_COLORS.entrySet());
 
@@ -56,11 +56,8 @@ public class BedwarsStarter implements GameStarter {
             createdTeams.add(new BedwarsTeam(color.getKey(), color.getValue(), teams.get(i)));
         }
 
-        List<ArenaMeta> availableArenas = arenaManager.findAvailableArenas(arenaMeta -> arenaMeta.getName().startsWith("bedwars"));
-        if (availableArenas.isEmpty()) throw new Exception("No available arenas");
-
         CompletableFuture<Game> future = new CompletableFuture<>();
-        CompletableFuture<ActiveArena> load = arenaManager.load(availableArenas.get(ThreadLocalRandom.current().nextInt(availableArenas.size())));
+        CompletableFuture<ActiveArena> load = arenaManager.load(arenaMeta);
         load.thenAccept(activeArena -> {
             Game createdMatch = Game.builder(InariDemo.getInstance(), activeArena, eventManager, scoreboardManager, createdTeams,
                             (game, previousRound) -> new AwaitingPlayersStage(game, 2, 10),

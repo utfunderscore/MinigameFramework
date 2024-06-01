@@ -37,13 +37,11 @@ public class SumoGameStarter implements GameStarter {
     private final ScoreboardManager scoreboardManager;
 
     @Override
-    public CompletableFuture<Game> startGame(List<List<UUID>> playerTeams) throws Exception {
+    public CompletableFuture<Game> startGame(ArenaMeta arenaMeta, List<List<UUID>> playerTeams) throws Exception {
 
         logger.info("Starting Sumo Game");
 
 
-        List<ArenaMeta> availableArenas = arenaManager.findAvailableArenas(arenaMeta -> arenaMeta.getName().startsWith("sumo"));
-        if(availableArenas.isEmpty()) throw new Exception("No available arenas");
 
         List<Team> teams = new ArrayList<>();
         for (int i = 0; i < playerTeams.size(); i++) {
@@ -55,7 +53,7 @@ public class SumoGameStarter implements GameStarter {
 
         logger.info("Finding arena.");
 
-        CompletableFuture<ActiveArena> arenaFuture = arenaManager.load(availableArenas.get(ThreadLocalRandom.current().nextInt(availableArenas.size())));
+        CompletableFuture<ActiveArena> arenaFuture = arenaManager.load(arenaMeta);
 
         arenaFuture.thenAccept(activeArena -> {
 

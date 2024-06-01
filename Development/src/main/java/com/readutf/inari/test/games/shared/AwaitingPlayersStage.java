@@ -36,6 +36,8 @@ public class AwaitingPlayersStage implements Round {
     @Override
     public void roundStart() {
 
+
+
         startCountdown(game, gameExpireTimeSeconds, new CancellableTask<>() {
             @Override
             public void run(Integer integer) {

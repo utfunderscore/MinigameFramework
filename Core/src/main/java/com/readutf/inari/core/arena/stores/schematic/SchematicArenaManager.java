@@ -42,6 +42,8 @@ import java.util.function.Predicate;
 
 public class SchematicArenaManager extends ArenaManager {
 
+    private static final int BUFFER_SIZE = 5;
+
     private @Getter final WorldCreator worldCreator;
     private @Getter final World world;
     private static Logger logger = LoggerFactory.getLogger(SchematicArenaManager.class);
@@ -71,7 +73,7 @@ public class SchematicArenaManager extends ArenaManager {
 
         for (ArenaMeta availableArena : availableArenas) {
             ArrayDeque<Arena> arenas = new ArrayDeque<>();
-            for (int i = 0; i < 1; i++) {
+            for (int i = 0; i < BUFFER_SIZE; i++) {
                 Arena load;
                 try {
                     load = loadArena(availableArena);

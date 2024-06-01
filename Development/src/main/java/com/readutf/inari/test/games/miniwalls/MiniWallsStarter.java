@@ -39,7 +39,7 @@ public class MiniWallsStarter implements GameStarter {
     );
 
     @Override
-    public CompletableFuture<Game> startGame(List<List<UUID>> playerTeams) throws Exception {
+    public CompletableFuture<Game> startGame(ArenaMeta arenaMeta, List<List<UUID>> playerTeams) throws Exception {
         Preconditions.checkArgument(playerTeams.size() == 2, "Miniwalls requires 2 playerTeams");
 
         List<Team> teams = new ArrayList<>();
@@ -47,10 +47,6 @@ public class MiniWallsStarter implements GameStarter {
             teams.add(new MiniWallsTeam("Team", teamColors.get(teams.size()), team));
         }
 
-        List<ArenaMeta> availableArenas = arenaManager.findAvailableArenas(arenaMeta -> arenaMeta.getName().startsWith("miniwalls"));
-        if (availableArenas.isEmpty()) throw new Exception("No available arenas");
-
-        ArenaMeta arenaMeta = availableArenas.get(ThreadLocalRandom.current().nextInt(availableArenas.size()));
 
         CompletableFuture<Game> gameReadyFuture = new CompletableFuture<>();
 

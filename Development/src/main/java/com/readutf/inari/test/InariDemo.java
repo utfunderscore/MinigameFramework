@@ -3,6 +3,7 @@ package com.readutf.inari.test;
 import co.aikar.commands.PaperCommandManager;
 import com.readutf.inari.core.arena.ArenaManager;
 import com.readutf.inari.core.arena.marker.impl.TileEntityScanner;
+import com.readutf.inari.core.arena.meta.ArenaMeta;
 import com.readutf.inari.core.arena.selection.impl.WorldEditSelectionManager;
 import com.readutf.inari.core.arena.stores.gridworld.GridArenaManager;
 import com.readutf.inari.core.arena.stores.schematic.SchematicArenaManager;
@@ -55,13 +56,14 @@ public class InariDemo extends JavaPlugin {
         paperCommandManager.getCommandCompletions().registerCompletion("gameids", new GameCompletions.GameIdCompletion(gameManager));
         paperCommandManager.getCommandCompletions().registerCompletion("gameplayers", new GameCompletions.GamePlayersCompletion(gameManager));
         paperCommandManager.getCommandCompletions().registerCompletion("gametypes", c -> gameStarterManager.getGameStarters());
+        paperCommandManager.getCommandCompletions().registerCompletion("arena", c -> arenaManager.findAvailableArenas(arenaMeta -> true).stream().map(ArenaMeta::getName).toList());
 
 
         Arrays.asList(
                 new ArenaCommands(this, worldEditSelectionManager, arenaManager),
-                new DevCommand(gameManager, arenaManager, gameEventManager),
+//                new DevCommand(gameManager, arenaManager, gameEventManager),
                 new EventDebugCommand(gameEventManager),
-                new GameCommand(gameStarterManager),
+                new GameCommand(arenaManager, gameStarterManager),
                 new GameMakerCommand(gameManager)
         ).forEach(paperCommandManager::registerCommand);
 
