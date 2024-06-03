@@ -31,4 +31,15 @@ public class WorldCuboid extends Cuboid {
         return location.getWorld() == world && super.contains(new Position(location));
     }
 
+    public int getXWidth() {
+        return getMax().getBlockX() - getMin().getBlockX();
+    }
+
+    public int getYWidth() {
+        return getMax().getBlockY() - getMin().getBlockY();
+    }
+
+    public int getZWidth() {
+        return getMax().getBlockZ() - getMin().getBlockZ();
+    }
 }

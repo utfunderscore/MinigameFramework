@@ -8,6 +8,7 @@ import com.readutf.inari.core.arena.selection.impl.WorldEditSelectionManager;
 import com.readutf.inari.core.arena.stores.gridworld.GridArenaManager;
 import com.readutf.inari.core.arena.stores.schematic.SchematicArenaManager;
 import com.readutf.inari.core.arena.stores.schematic.loader.impl.WorldEditLoader;
+import com.readutf.inari.core.arena.stores.worldloader.WorldArenaManager;
 import com.readutf.inari.core.commands.ArenaCommands;
 import com.readutf.inari.core.commands.EventDebugCommand;
 import com.readutf.inari.core.commands.completions.GameCompletions;
@@ -45,8 +46,9 @@ public class InariDemo extends JavaPlugin {
     public void onEnable() {
 
         WorldEditSelectionManager worldEditSelectionManager = new WorldEditSelectionManager();
-        this.arenaManager = new SchematicArenaManager(this, new TileEntityScanner(), new WorldEditLoader(this), new File(getDataFolder(), "arenas"));
+//        this.arenaManager = new SchematicArenaManager(this, new TileEntityScanner(), new WorldEditLoader(this), new File(getDataFolder(), "arenas"));
 //        this.arenaManager = new GridArenaManager(this, getDataFolder(), new TileEntityScanner());
+        this.arenaManager = new WorldArenaManager(this, new File(getDataFolder(), "arenas"), new TileEntityScanner());
         this.gameManager = new GameManager();
         this.gameEventManager = new GameEventManager(this, gameManager);
         this.gameStarterManager = new GameStarterManager(arenaManager, gameManager, new ScoreboardManager(this), gameEventManager);
