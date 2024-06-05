@@ -44,7 +44,6 @@ public class TileEntityScanner implements MarkerScanner {
             }
         }
 
-        System.out.println("Scanning " + chunks.size() + " chunks");
 
         for (Chunk chunk : chunks.values()) {
 

@@ -13,6 +13,7 @@ import com.readutf.inari.core.game.Game;
 import com.readutf.inari.core.logging.Logger;
 import com.readutf.inari.core.logging.LoggerFactory;
 import com.readutf.inari.core.utils.Position;
+import com.readutf.inari.core.utils.ThreadUtils;
 import com.readutf.inari.core.utils.WorldCuboid;
 import com.readutf.inari.core.utils.WorldEditUtils;
 import com.sk89q.worldedit.EditSession;
@@ -33,24 +34,25 @@ import org.bukkit.World;
 import org.bukkit.WorldCreator;
 import org.bukkit.WorldType;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.util.*;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public class WorldArenaManager extends ArenaManager {
 
     private static final Logger logger = LoggerFactory.getLogger(WorldArenaManager.class);
 
-    private static final int ARENA_COPIES = 15;
+    private static final int ARENA_COPIES = 50;
     private static final int DISTANCE_BETWEEN = 500;
     private final File storeFile;
     private final JavaPlugin javaPlugin;
@@ -61,23 +63,24 @@ public class WorldArenaManager extends ArenaManager {
         this.javaPlugin = javaPlugin;
         this.storeFile = storeFile;
         this.activeInstances = new HashMap<>();
+        Bukkit.getPluginManager().registerEvents(new WorldEventListener(), javaPlugin);
         if (storeFile.mkdirs()) logger.info("Created arena store directory at " + storeFile.getAbsolutePath());
     }
 
     @SneakyThrows
     @Override
-    protected void save(WorldCuboid worldCuboid, Arena arena) throws ArenaStoreException {
+    protected void save(WorldCuboid worldCuboid, Arena arena, Consumer<String> messageCallback) {
+
+        if (worldExists(arena.getName() + "_template")) {
+            messageCallback.accept("&cArena already exists, overwriting...");
+            FileUtils.deleteDirectory(new File(javaPlugin.getServer().getWorldContainer(), arena.getName() + "_template"));
+        }
 
         World arenaTemplateWorld = generateEmptyWorld(arena.getName() + "_template");
-
-        ExecutorService executor = Executors.newCachedThreadPool();
-
 
         List<Integer> instanceIndexes = new ArrayList<>();
 
         try (EditSession targetSource = WorldEdit.getInstance().newEditSession(BukkitAdapter.adapt(arenaTemplateWorld))) {
-
-            List<CompletableFuture<Void>> pasteFutures = new ArrayList<>();
 
 
             for (int i = 0; i < ARENA_COPIES; i++) {
@@ -94,13 +97,14 @@ public class WorldArenaManager extends ArenaManager {
                 BlockVector3 target = BlockVector3.at(i * DISTANCE_BETWEEN, 0, 0);
                 Operation operation = new ClipboardHolder(clipboard)
                         .createPaste(targetSource)
+                        .ignoreAirBlocks(true)
                         .to(target)
                         .build();
 
 
                 Operations.complete(operation);
 
-                logger.info("Pasted arena " + arena.getName() + " at " + 123);
+                logger.info("Pasted arena " + arena.getName() + " at " + target);
                 instanceIndexes.add(i * DISTANCE_BETWEEN);
 
             }
@@ -110,6 +114,9 @@ public class WorldArenaManager extends ArenaManager {
         if (arenaFolder.mkdirs()) logger.info("Created arena folder");
 
         FileWriter writer = new FileWriter(new File(arenaFolder, "arena.json"));
+
+        arena = arena.normalize();
+
         Game.getGson().toJson(arena, writer);
         writer.flush();
 
@@ -122,6 +129,8 @@ public class WorldArenaManager extends ArenaManager {
         boolean unloaded = Bukkit.unloadWorld(arenaTemplateWorld, true);
         if (!unloaded) throw new ArenaStoreException("Failed to unload world");
 
+        FileUtils.delete(new File(worldFolder, "uid.dat"));
+
         try {
             FileUtils.copyDirectory(worldFolder, new File(arenaFolder, arena.getName() + "_template"));
         } catch (Exception e) {
@@ -131,35 +140,56 @@ public class WorldArenaManager extends ArenaManager {
 
     }
 
+    private static final ExecutorService executorService = Executors.newSingleThreadExecutor();
+
     @SneakyThrows
     @Override
     public CompletableFuture<ActiveArena> load(ArenaMeta arenaMeta) throws ArenaLoadException {
 
+        CompletableFuture<ActiveArena> future = new CompletableFuture<>();
 
         File arenaFolder = new File(storeFile, arenaMeta.getName());
-
-
-        FileReader arenaDataReader = new FileReader(new File(arenaFolder, "arena.json"));
+        FileReader arenaDataReader;
+        try {
+            arenaDataReader = new FileReader(new File(arenaFolder, "arena.json"));
+        } catch (FileNotFoundException e) {
+            return CompletableFuture.failedFuture(e);
+        }
         Arena arena = Game.getGson().fromJson(arenaDataReader, Arena.class);
 
         ActiveInstance activeInstance = activeInstances.get(arenaMeta);
         if (activeInstance == null || activeInstance.isFinished()) {
 
-            FileReader instancesReader = new FileReader(new File(arenaFolder, "instances.json"));
-            List<Integer> instances = Game.getGson().fromJson(instancesReader, new TypeToken<>() {});
+            logger.info("Creating new instance for " + arenaMeta.getName());
+
+            FileReader instancesReader;
+            try {
+                instancesReader = new FileReader(new File(arenaFolder, "instances.json"));
+            } catch (FileNotFoundException e) {
+                return CompletableFuture.failedFuture(e);
+            }
+            List<Integer> instances = Game.getGson().fromJson(instancesReader, new TypeToken<>() {
+            });
 
             String instanceName = arenaMeta.getName() + ThreadLocalRandom.current().nextInt(11111, 99999);
-            FileUtils.copyDirectory(new File(arenaFolder, arenaMeta.getName() + "_template"), new File(javaPlugin.getServer().getWorldContainer(), instanceName));
+            try {
+                FileUtils.copyDirectory(new File(arenaFolder, arenaMeta.getName() + "_template"), new File(javaPlugin.getServer().getWorldContainer(), instanceName));
+            } catch (IOException e) {
+                return CompletableFuture.failedFuture(e);
+            }
 
-            new WorldCreator(instanceName).createWorld();
+            ThreadUtils.ensureSync(javaPlugin, () -> {
+                new WorldCreator(instanceName).createWorld();
+            }).join();
 
-            activeInstances.put(arenaMeta, activeInstance =  new ActiveInstance(Bukkit.getWorld(instanceName), instances));
+            activeInstances.put(arenaMeta, activeInstance = new ActiveInstance(Bukkit.getWorld(instanceName), instances));
 
         }
 
+        arena = arena.makeRelative(new Position(activeInstance.getCurrentIndex().incrementAndGet(), 0, 0));
+        future.complete(new ActiveArena(activeInstance.getWorld(), arena, this::free));
 
-        arena.makeRelative(new Position(activeInstance.getNextIndex(), 0, 0));
-        return CompletableFuture.completedFuture(new ActiveArena(activeInstance.getWorld(), arena, this::unload));
+        return future;
     }
 
     @Override
@@ -169,15 +199,15 @@ public class WorldArenaManager extends ArenaManager {
 
     @SneakyThrows
     @Override
-    public @Nullable List<ArenaMeta> findAvailableArenas(Predicate<ArenaMeta> predicate) {
+    public List<ArenaMeta> findAvailableArenas(Predicate<ArenaMeta> predicate) {
 
-        if(storeFile == null || !storeFile.exists()) return List.of();
+        if (storeFile == null || !storeFile.exists()) return List.of();
 
         ArrayList<ArenaMeta> arenaMetas = new ArrayList<>();
         for (File arenaFile : storeFile.listFiles()) {
 
             File arenaDataFile = new File(arenaFile, "arena.json");
-            if(!arenaDataFile.exists()) continue;
+            if (!arenaDataFile.exists()) continue;
             FileReader arenaDataReader = new FileReader(arenaDataFile);
 
 
@@ -201,17 +231,45 @@ public class WorldArenaManager extends ArenaManager {
         return created;
     }
 
+    public boolean worldExists(String name) {
+        return new File(javaPlugin.getServer().getWorldContainer(), name).exists();
+    }
+
+    public void free(ActiveArena activeArena) {
+
+        ActiveInstance activeInstance = activeInstances.get(activeArena.getArenaMeta());
+        activeInstance.removeLock(activeArena);
+        if(activeInstance.canDelete()) {
+            Bukkit.unloadWorld(activeInstance.getWorld(), true);
+            activeInstances.remove(activeArena.getArenaMeta());
+        }
+
+    }
+
     @Getter
     public static class ActiveInstance {
 
         private final World world;
         private final List<Integer> indexes;
         private AtomicInteger currentIndex;
+        private static List<ActiveArena> arenaLocks = new ArrayList<>();
 
         public ActiveInstance(World world, List<Integer> indexes) {
             this.world = world;
             this.indexes = indexes;
             this.currentIndex = new AtomicInteger(0);
+        }
+
+        public void addToLock(ActiveArena arena) {
+            arenaLocks.add(arena);
+        }
+
+        public boolean canDelete() {
+            return arenaLocks.isEmpty();
+        }
+
+        public void removeLock(ActiveArena arena) {
+            arenaLocks.remove(arena);
         }
 
         public int getNextIndex() {

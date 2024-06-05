@@ -7,6 +7,7 @@ import com.readutf.inari.core.arena.ArenaManager;
 import com.readutf.inari.core.arena.exceptions.ArenaLoadException;
 import com.readutf.inari.core.arena.meta.ArenaMeta;
 import com.readutf.inari.core.arena.stores.gridworld.GridArenaManager;
+import com.readutf.inari.core.arena.stores.worldloader.WorldArenaManager;
 import com.readutf.inari.core.event.GameEventManager;
 import com.readutf.inari.core.game.GameManager;
 import com.readutf.inari.core.utils.ChunkCopy;
@@ -23,45 +24,55 @@ import org.bukkit.craftbukkit.v1_20_R3.CraftChunk;
 import org.bukkit.craftbukkit.v1_20_R3.CraftWorld;
 import org.bukkit.entity.Player;
 
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
-@RequiredArgsConstructor
 public class DevCommand extends BaseCommand {
 
-    private final GameManager gameManager;
-    private final GridArenaManager arenaManager;
-    private final GameEventManager eventManager;
+    private final WorldArenaManager worldArenaManager;
 
-
-    @SneakyThrows
-    @CommandAlias( "dev-sync" )
-    public void syncPaste(Player player) {
-
-        ArenaMeta meta = arenaManager.findAvailableArenas(arenaMeta -> arenaMeta.getName().startsWith("sumo")).get(0);
-
-        ActiveArena activeArena = arenaManager.spawnNewArena(meta);
-
+    public DevCommand(WorldArenaManager worldArenaManager) {
+        this.worldArenaManager = worldArenaManager;
     }
 
-    @SneakyThrows
-    @CommandAlias( "dev-async" )
-    public void asyncPaste(Player player) {
+    @CommandAlias("test-world-arena")
+    public void test(Player player, String arenaName, int numOfArenas) {
 
-        ArenaMeta meta = arenaManager.findAvailableArenas(arenaMeta -> arenaMeta.getName().startsWith("sumo")).get(0);
+        ArenaMeta found = worldArenaManager.findAvailableArenas(arenaMeta -> arenaMeta.getName().equalsIgnoreCase(arenaName)).stream().findFirst().orElse(null);
+        if (found == null) {
+            player.sendMessage("No arena found with the name " + arenaName);
+            return;
+        }
 
-        CompletableFuture.runAsync(() -> {
+        long start = System.currentTimeMillis();
+
+        List<CompletableFuture<ActiveArena>> futures = IntStream.range(0, numOfArenas).mapToObj(value -> {
             try {
-                ActiveArena activeArena = arenaManager.spawnNewArena(meta);
+                return worldArenaManager.load(found);
             } catch (ArenaLoadException e) {
-
+                e.printStackTrace();
+                return null;
             }
-        }).thenAccept(unused -> {
-            player.sendMessage("Arena loaded");
+        }).filter(Objects::nonNull).toList();
+
+        CompletableFuture<Void> allLoaded = CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new));
+
+        allLoaded.thenAccept(unused -> {
+            player.sendMessage(futures.size() + " arenas loaded in " + (System.currentTimeMillis() - start) + "ms");
+
+            for (CompletableFuture<ActiveArena> future : futures) {
+                ActiveArena join = future.join();
+                join.free();
+            }
+
         });
 
-    }
 
+    }
 
 }

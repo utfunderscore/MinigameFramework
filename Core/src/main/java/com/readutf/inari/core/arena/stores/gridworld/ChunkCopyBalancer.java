@@ -40,7 +40,6 @@ public class ChunkCopyBalancer extends BukkitRunnable {
             timeTaken += System.currentTimeMillis() - start;
             pasted++;
         }
-        System.out.println("pasted: " + pasted + " chunks in " + timeTaken + "ms");
 
 
         if (chunkPasteTasks.isEmpty()) {

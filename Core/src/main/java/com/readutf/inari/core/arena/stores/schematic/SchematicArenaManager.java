@@ -38,6 +38,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public class SchematicArenaManager extends ArenaManager {
@@ -90,7 +91,7 @@ public class SchematicArenaManager extends ArenaManager {
     }
 
     @Override
-    public void save(WorldCuboid worldCuboid, Arena arena) throws ArenaStoreException {
+    public void save(WorldCuboid worldCuboid, Arena arena, Consumer<String> messageCallback) throws ArenaStoreException {
 
         File arenaFolder = new File(arenasFolder, arena.getName());
         if (arenaFolder.mkdirs()) logger.info("Created arena folder");

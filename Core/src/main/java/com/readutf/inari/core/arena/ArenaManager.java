@@ -12,6 +12,7 @@ import org.bukkit.material.MaterialData;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public abstract class ArenaManager {
@@ -32,17 +33,13 @@ public abstract class ArenaManager {
      * @throws ArenaStoreException If the arena could not be saved
      */
     @SuppressWarnings( "deprecation" )
-    public ArenaMeta createArena(String name, WorldCuboid cuboid) throws ArenaStoreException {
+    public ArenaMeta createArena(String name, WorldCuboid cuboid, Consumer<String> messageCallback) throws ArenaStoreException {
         List<Marker> markers = markerScanner.scan(cuboid);
 
         ArenaMeta arenaMeta = new ArenaMeta(name, "test", new MaterialData(Material.PAPER), 10, markers.size());
         Arena arena = new Arena(name, cuboid.toCuboid(), arenaMeta, markers);
 
-        for (Marker marker : markers) {
-            marker.toLocation(cuboid.getWorld()).getBlock().setType(Material.AIR);
-        }
-
-        save(cuboid, arena);
+        save(cuboid, arena, messageCallback);
 
         return arenaMeta;
     }
@@ -53,11 +50,13 @@ public abstract class ArenaManager {
      * 1. Normalise the arena to its minimum point ensuring that markers can be aligned correctly when loading
      * 2. Save the blocks within the cuboid, either to a file, or using your own method
      * 3. Save the data required to load the arena, such as the world, the cuboid, and any other data
-     * @param worldCuboid The cuboid to save
-     * @param arena The arena object to save
+     *
+     * @param worldCuboid     The cuboid to save
+     * @param arena           The arena object to save
+     * @param messageCallback
      * @throws ArenaStoreException If the arena could not be saved
      */
-    protected abstract void save(WorldCuboid worldCuboid, Arena arena) throws ArenaStoreException;
+    protected abstract void save(WorldCuboid worldCuboid, Arena arena, Consumer<String> messageCallback) throws ArenaStoreException;
 
     /**
      * Load the arena from the provided ArenaMeta

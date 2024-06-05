@@ -36,7 +36,12 @@ public class Arena {
         Position relativePoint = bounds.getMin();
 
         Cuboid newBounds = new Cuboid(new Position(0, 0, 0), bounds.getMax().subtract(relativePoint));
-        List<Marker> newMarkers = markers.stream().map(marker -> new Marker(marker.getName(), marker.getPosition().subtract(relativePoint), marker.getOffset(), marker.getYaw())).toList();
+        List<Marker> newMarkers = markers.stream().map(marker -> {
+            System.out.println("before: " + marker.getPosition());
+            Position after = marker.getPosition().subtract(relativePoint);
+            System.out.println("after: " + after);
+            return new Marker(marker.getName(), after, marker.getOffset(), marker.getYaw());
+        }).toList();
 
         return new Arena(name, newBounds, arenaMeta, newMarkers);
     }

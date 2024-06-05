@@ -168,8 +168,6 @@ public class SumoListeners {
     public void onQuit(PlayerQuitEvent e) {
         game.killPlayer(e.getPlayer());
 
-        System.out.println("added with debug");
-
         if(game.getAliveTeams().size() == 1) {
             game.endGame(game.getAliveTeams().get(0), GameEndReason.ENEMIES_ELIMINATED);
         } else if(game.getAliveTeams().isEmpty()) {

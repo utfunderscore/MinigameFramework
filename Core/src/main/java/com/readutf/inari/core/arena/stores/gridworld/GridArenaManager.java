@@ -43,6 +43,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public class GridArenaManager extends ArenaManager {
@@ -114,7 +115,7 @@ public class GridArenaManager extends ArenaManager {
     }
 
     @Override
-    protected void save(WorldCuboid worldCuboid, Arena arena) {
+    protected void save(WorldCuboid worldCuboid, Arena arena, Consumer<String> messageCallback) {
 
         World world = worldCuboid.getWorld();
 

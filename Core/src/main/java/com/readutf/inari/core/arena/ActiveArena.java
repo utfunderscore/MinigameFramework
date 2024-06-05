@@ -9,9 +9,9 @@ import java.util.function.Consumer;
 public class ActiveArena extends Arena {
 
     private final World world;
-    private final Consumer<Arena> freeArenaFunction;
+    private final Consumer<ActiveArena> freeArenaFunction;
 
-    public ActiveArena(World world, Arena arena, Consumer<Arena> freeArenaFunction) {
+    public ActiveArena(World world, Arena arena, Consumer<ActiveArena> freeArenaFunction) {
         super(arena.getName(), arena.getBounds(), arena.getArenaMeta(), arena.getMarkers());
         this.world = world;
         this.freeArenaFunction = freeArenaFunction;

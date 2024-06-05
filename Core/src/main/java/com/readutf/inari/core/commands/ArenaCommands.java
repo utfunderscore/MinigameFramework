@@ -9,6 +9,8 @@ import com.readutf.inari.core.arena.exceptions.ArenaStoreException;
 import com.readutf.inari.core.arena.meta.ArenaMeta;
 import com.readutf.inari.core.arena.selection.SelectionManager;
 import com.readutf.inari.core.arena.stores.gridworld.GridArenaManager;
+import com.readutf.inari.core.logging.Logger;
+import com.readutf.inari.core.logging.LoggerFactory;
 import com.readutf.inari.core.utils.ColorUtils;
 import com.readutf.inari.core.utils.WorldCuboid;
 import lombok.AllArgsConstructor;
@@ -19,40 +21,42 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.List;
 
-@CommandAlias( "arena" )
+@CommandAlias("arena")
 @AllArgsConstructor
 public class ArenaCommands extends BaseCommand {
+
+    private static final Logger logger = LoggerFactory.getLogger(ArenaCommands.class);
 
     private final JavaPlugin javaPlugin;
     private final SelectionManager selectionManager;
     private final ArenaManager arenaManager;
 
-    @Subcommand( "create" )
+    @Subcommand("create")
     public void createArena(Player player, String name) {
 
         WorldCuboid selection = selectionManager.getSelection(player);
         if (selection == null) {
-            player.sendMessage(ChatColor.RED + "You must make a selection first.");
+            player.sendMessage(ColorUtils.color("&cYou must make a selection first!"));
             return;
         }
         try {
-            ArenaMeta arena = arenaManager.createArena(name, selection);
+            ArenaMeta arena = arenaManager.createArena(name, selection, message -> player.sendMessage(ColorUtils.color(message)));
 
             player.sendMessage(ColorUtils.color("&aCreated arena " + arena.getName() + " with " + arena.getNumOfMarkers() + " markers."));
         } catch (ArenaStoreException e) {
-            e.printStackTrace();
+            logger.error("Could not create arena", e);
             player.sendMessage(ColorUtils.color("&cCould not create arena: " + e.getLocalizedMessage()));
         }
 
 
     }
 
-    @Subcommand( "testload" )
+    @Subcommand("testload")
     public void testLoad(Player player) {
 
         try {
 
-
+Z
             List<ArenaMeta> availableArenas = arenaManager.findAvailableArenas(arenaMeta -> true);
 
             availableArenas.stream().findFirst().ifPresent(arenaMeta -> {
