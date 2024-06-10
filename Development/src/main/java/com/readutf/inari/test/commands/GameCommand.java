@@ -21,8 +21,7 @@ public class GameCommand extends BaseCommand {
 
     private final ArenaManager arenaManager;
     private final GameStarterManager gameStarterManager;
-
-
+    
     @SneakyThrows
     @Subcommand("start") @CommandCompletion("@gametypes @arena @players")
     public void start(Player player, String gameName, String arenaName, String... players) {

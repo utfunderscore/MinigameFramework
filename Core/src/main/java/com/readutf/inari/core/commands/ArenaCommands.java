@@ -4,18 +4,15 @@ import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.Subcommand;
 import com.readutf.inari.core.arena.ArenaManager;
-import com.readutf.inari.core.arena.exceptions.ArenaLoadException;
 import com.readutf.inari.core.arena.exceptions.ArenaStoreException;
 import com.readutf.inari.core.arena.meta.ArenaMeta;
 import com.readutf.inari.core.arena.selection.SelectionManager;
-import com.readutf.inari.core.arena.stores.gridworld.GridArenaManager;
 import com.readutf.inari.core.utils.ColorUtils;
 import com.readutf.inari.core.utils.WorldCuboid;
 import lombok.AllArgsConstructor;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.List;
 
@@ -47,41 +44,15 @@ public class ArenaCommands extends BaseCommand {
 
     }
 
-    @Subcommand( "testload" )
-    public void testLoad(Player player) {
+    @Subcommand( "list" )
+    public void listArenas(Player player) {
+        List<ArenaMeta> allArenas = arenaManager.findAvailableArenas(arenaMeta -> true);
 
-        try {
-
-
-            List<ArenaMeta> availableArenas = arenaManager.findAvailableArenas(arenaMeta -> true);
-
-            availableArenas.stream().findFirst().ifPresent(arenaMeta -> {
-                try {
-                    arenaManager.load(arenaMeta).thenAccept(arena -> {
-
-
-                        player.sendMessage(ChatColor.GREEN + "Loaded arena " + arenaMeta.getName());
-
-                        System.out.println(arena);
-
-                        player.teleport(arena.getBounds().getMin().toLocation(GridArenaManager.getActiveArenasWorld()));
-
-                        new BukkitRunnable() {
-                            @Override
-                            public void run() {
-                                arenaManager.unload(arena);
-                            }
-                        }.runTaskLater(javaPlugin, 20 * 5);
-                    });
-
-
-                } catch (ArenaLoadException e) {
-                    e.getException().printStackTrace();
-                }
-            });
-        } catch (Exception e) {
-            e.printStackTrace();
+        player.sendMessage(ColorUtils.color("&aAvailable Arenas:"));
+        for (ArenaMeta allArena : allArenas) {
+            player.sendMessage(ColorUtils.color(" &8* &f%s &7(%s markers)".formatted(allArena.getName(), allArena.getNumOfMarkers())));
         }
+
     }
 
 }

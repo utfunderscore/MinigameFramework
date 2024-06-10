@@ -207,10 +207,6 @@ public class SchematicArenaManager extends ArenaManager {
         List<ArenaMeta> list = new ArrayList<>();
         for (ArenaMeta arenaMeta : availableArenas) {
             if (predicate.test(arenaMeta)) {
-                if (cachedArenas.getOrDefault(arenaMeta, new ArrayDeque<>()).isEmpty()) {
-                    logger.info("Failed to find available arena for " + arenaMeta.getName() + ", low cache level");
-                    continue;
-                }
                 list.add(arenaMeta);
             }
         }
